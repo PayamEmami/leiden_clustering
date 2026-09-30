@@ -1,0 +1,1042 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Leiden Clustering",
+    "section": "",
+    "text": "Preface\nMany of the clustering methods you may already know work directly on coordinates or on distances between rows of a data matrix. K-means assigns each observation to its nearest centroid. DBSCAN counts how many observations fall inside a fixed radius of each other observation. Spectral clustering builds a similarity graph but then leaves it, building new coordinates from its eigenvectors before clustering those coordinates instead.\nLeiden clustering takes a different approach. It builds a graph from the data, connecting each observation to a handful of its nearest neighbours, and then looks for communities: groups of nodes that are more strongly connected to each other than to the rest of the graph. It never leaves the graph to build new coordinates. The partition it returns is a property of the graph itself.\nLeiden is one of the most widely used clustering methods in single-cell RNA sequencing analysis, where it groups cells into candidate types or states based on a neighbour graph built from principal component coordinates. It is also used far beyond biology, wherever observations can reasonably be represented as a network.\nStart with the visual introduction.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "intuition.html",
+    "href": "intuition.html",
+    "title": "1  Leiden clustering",
+    "section": "",
+    "text": "1.1 From coordinates to a graph\nMost clustering methods you have met so far work directly on coordinates or on distances between rows of a data matrix. K-means compares every point with a small number of centroids. DBSCAN counts how many points fall inside a fixed radius of each other point. Both methods take the position of an observation as the thing to reason about.\nLeiden starts from a different kind of object. Instead of positions, it works on a graph. A graph is built from two ingredients. A node is one observation, such as one point in a scatter plot or one cell in a single-cell experiment. An edge is a relationship between two nodes, usually drawn because the two observations are close to each other or similar in some measured sense. An edge weight is a number attached to an edge that says how strong that relationship is. A large weight means strong evidence that the two nodes belong together. A small weight means weak evidence.\nOnce the data has been turned into a graph, Leiden looks for a community: a group of nodes that are more strongly connected to each other than to the rest of the graph.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#a-point-cloud",
+    "href": "intuition.html#a-point-cloud",
+    "title": "1  Leiden clustering",
+    "section": "1.2 A point cloud",
+    "text": "1.2 A point cloud\nHere are 220 points measured on two variables.\n\n\n\n\n\n\n\nFigure 1.1: 220 unlabeled observations, forming two interleaved curved bands and two round groups of different sizes.\n\n\n\n\nThere are no colors and no labels in Figure 1.1. A method built around centroids would need to guess how many centres to place and where. A method built around a graph asks a more local question first: which points sit near which other points?",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#building-a-neighbour-graph",
+    "href": "intuition.html#building-a-neighbour-graph",
+    "title": "1  Leiden clustering",
+    "section": "1.3 Building a neighbour graph",
+    "text": "1.3 Building a neighbour graph\nPick one point and connect it to its nearest neighbours.\n\n\n\n\n\n\n\nFigure 1.2: One node, in black, connected by edges to its six nearest neighbours, shown in blue.\n\n\n\n\nFigure 1.2 shows this for a single point. The black point is a node. Each orange line connecting it to one of its six nearest neighbours is an edge. A natural choice of weight is some decreasing function of distance, so that nearby points get a strong edge and distant points get a weak one. Repeating this construction for every point in the data produces a full graph.\n\n\n\n\n\n\n\nFigure 1.3: The same 220 points, each connected to its 8 nearest neighbours.\n\n\n\n\nFigure 1.3 draws every edge at once. This particular construction, connecting each point to its \\(k\\) nearest neighbours, is called a k-nearest-neighbour graph, or KNN graph. Even without running any algorithm, the picture already shows regions where edges pile up densely and other regions where they thin out. That contrast between dense and sparse is exactly what a community detection method exploits.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#from-graph-to-communities",
+    "href": "intuition.html#from-graph-to-communities",
+    "title": "1  Leiden clustering",
+    "section": "1.4 From graph to communities",
+    "text": "1.4 From graph to communities\nA person looking at Figure 1.3 can already guess roughly where the groups are, simply by eye.\n\n\n\n\n\n\n\nFigure 1.4: Left: the graph with dashed ellipses around visually dense regions, a rough human guess. Right: the actual communities found by Leiden on this graph, in four colors.\n\n\n\n\nThe left panel of Figure 1.4 shows a rough, human guess at candidate communities, drawn simply by eye from the density of the picture. It treats the two interleaved crescents as one blob, because from the tangle of edges alone it is not obvious that they are two separate structures. The right panel shows the communities that Leiden actually finds on this graph. It separates the two crescents from each other, in addition to picking out the small and large round groups. The final grouping used more than visual density. It used the precise pattern of which nodes connect to which, something a formal procedure can examine far more carefully than a human eye can.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#the-same-pipeline-in-single-cell-analysis",
+    "href": "intuition.html#the-same-pipeline-in-single-cell-analysis",
+    "title": "1  Leiden clustering",
+    "section": "1.5 The same pipeline in single-cell analysis",
+    "text": "1.5 The same pipeline in single-cell analysis\nA single-cell RNA sequencing experiment measures the expression of thousands of genes in each of thousands of cells. Leiden clustering is one of the standard ways to group cells into candidate cell types or states, and it follows exactly the pipeline just described.\n\n\n\n\n\n\n\nFigure 1.5: The single-cell Leiden workflow. Gene expression is preprocessed, reduced to variable genes and PCA coordinates, turned into a neighbour graph, and clustered with Leiden. UMAP is drawn as a separate branch off the same neighbour graph, used only for visualization.\n\n\n\n\nFigure 1.5 shows the usual order of operations. Raw counts are preprocessed and normalized. A subset of variable genes is chosen. Principal component analysis reduces those genes to a smaller number of coordinates. A neighbour graph is built from the PCA coordinates, and Leiden clusters that graph. UMAP sits on its own branch, built from the same neighbour graph but used only to draw a two-dimensional picture of the cells.\n\n\n\n\n\n\nImportantLeiden does not cluster UMAP coordinates\n\n\n\nIt is easy to assume, looking at a UMAP plot with colored clusters, that the clustering was computed on the two UMAP coordinates. It was not. Leiden receives the neighbour graph, which is normally built from many PCA dimensions, not two. Two clusters that look separated on a UMAP plot is a visualization fact. It is not the mathematical definition that Leiden actually used to decide whether two cells belong together. UMAP can distort distances and neighbourhoods in ways that make groups look more or less separated than they are in the graph that was actually clustered.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#knn-and-snn-graphs",
+    "href": "intuition.html#knn-and-snn-graphs",
+    "title": "1  Leiden clustering",
+    "section": "1.6 KNN and SNN graphs",
+    "text": "1.6 KNN and SNN graphs\nFigure 1.3 used a plain KNN graph: connect each point to its \\(k\\) nearest neighbours. This relationship is not symmetric. Point \\(A\\) can count \\(B\\) among its nearest neighbours without \\(B\\) returning the favor, if \\(B\\) has other points that are even closer to it.\n\n\n\n\n\n\n\nFigure 1.6: Left: a KNN graph is directed. A’s nearest neighbours point outward from A, and B’s nearest neighbours point outward from B, and the two sets do not have to agree. Right: an SNN graph instead weighs the edge between A and B by how many neighbours they have in common.\n\n\n\n\nThe left panel of Figure 1.6 shows this asymmetry. \\(A\\)’s nearest neighbours include \\(C\\) and \\(D\\). \\(B\\)’s nearest neighbours include \\(D\\) and \\(F\\). \\(A\\) and \\(B\\) are not each other’s nearest neighbours, yet they do share one, \\(D\\).\nA shared nearest neighbour graph, or SNN graph, uses that overlap directly. Instead of asking only whether \\(A\\) and \\(B\\) are close, it counts how many neighbours \\(A\\) and \\(B\\) have in common and turns that count into an edge weight. The right panel of Figure 1.6 shows this: the edge between \\(A\\) and \\(B\\) is drawn because they share one neighbour, \\(D\\), and its weight reflects that overlap rather than the raw distance between \\(A\\) and \\(B\\).\nSeurat commonly builds an SNN graph from the KNN relationships before clustering, while Scanpy stores a weighted connectivity graph that already accounts for shared and overlapping neighbourhoods. The important idea for now is only that a neighbour graph can be built in more than one way, and that the choice affects which edges exist and how strong they are. Chapter 2 returns to the specific package functions.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#what-is-a-graph-community",
+    "href": "intuition.html#what-is-a-graph-community",
+    "title": "1  Leiden clustering",
+    "section": "1.7 What is a graph community?",
+    "text": "1.7 What is a graph community?\nStep away from point clouds for a moment and look at a graph directly. Figure 1.7 shows ten nodes. Five of them, on the left, are connected to each other by every possible edge. The other five, on the right, are connected the same way. A single edge crosses between the two groups.\n\n\n\n\n\n\n\nFigure 1.7: Left: treating all ten nodes as one community counts every edge as internal, including the one weak bridge, but says nothing useful. Right: splitting into two groups of five keeps twenty of the twenty-one edges internal and leaves only the bridge as an external edge.\n\n\n\n\nA reasonable starting definition of a community is a group of nodes with many internal connections. Both groups of five in Figure 1.7 qualify. But that definition alone is not enough. If the only goal is to maximize the number of edges counted as internal, the left panel of Figure 1.7 already wins. Treating all ten nodes as one single community makes every one of its 21 edges internal, including the weak bridge. That answer is technically maximal and completely useless. It does not distinguish anything.\nThe two-community answer on the right keeps 20 of the 21 edges internal and leaves only the bridge as an external edge. It gives up counting one edge in exchange for a partition that actually separates two distinguishable groups. A better definition of community detection therefore needs some way to penalize grouping observations together just because doing so is never counted against you. We will get back to this later. For now, the important idea is only that raw edge-counting is not enough, and that some kind of penalty for group size is needed to avoid the trivial answer of one giant cluster.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#leiden-compared-with-familiar-clustering-methods",
+    "href": "intuition.html#leiden-compared-with-familiar-clustering-methods",
+    "title": "1  Leiden clustering",
+    "section": "1.8 Leiden compared with familiar clustering methods",
+    "text": "1.8 Leiden compared with familiar clustering methods\nBefore going further, it helps to place Leiden next to methods you likely already know.\nK-means operates on the coordinates of the observations and favors compact groups built around a centroid. It struggles with curved or irregular shapes, and it needs the number of clusters fixed in advance.\nDBSCAN looks for connected regions where points are locally dense in the chosen feature space, and separates them from sparser regions labelled as noise. Like k-means, it works directly on coordinates and distances rather than a graph.\nHierarchical clustering recursively joins or splits observations based on a distance or similarity measure, producing a tree of nested groupings rather than a single flat partition.\nSpectral clustering builds a similarity graph, then uses the eigenvectors of a matrix derived from that graph to construct a new set of coordinates, and finally clusters those coordinates, often with k-means.\nLouvain works directly on a graph and searches for a partition that optimizes a quality score, without ever leaving the graph to build new coordinates.\nLeiden is also a graph community detection method. It follows the same overall strategy as Louvain, optimizing a quality score directly on the graph, but adds a refinement step and offers stronger guarantees about how well connected the resulting communities are. The next few sections explain what that refinement step actually does and why it is needed.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#introducing-louvain",
+    "href": "intuition.html#introducing-louvain",
+    "title": "1  Leiden clustering",
+    "section": "1.9 Introducing Louvain",
+    "text": "1.9 Introducing Louvain\nLeiden is best understood as an improvement on an earlier algorithm called Louvain. Louvain repeats four operations.\n\nStart with every node in its own community.\nMove nodes, one at a time, into a neighbouring community whenever doing so improves the partition.\nOnce no more beneficial moves exist, collapse each community into a single node, producing a smaller graph.\nRepeat the process on this smaller graph.\n\n\n\n\n\n\n\n\nFigure 1.8: Louvain’s four repeated steps on a small graph: begin with singleton communities, move nodes to improve the partition, arrive at communities, then collapse each community into one node for the next round.\n\n\n\n\nFigure 1.8 shows this sequence. Communities emerge from many small local decisions, and then the whole process repeats one level up, on a graph where each node now represents a whole community from the previous level.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#where-louvain-can-get-stuck",
+    "href": "intuition.html#where-louvain-can-get-stuck",
+    "title": "1  Leiden clustering",
+    "section": "1.10 Where Louvain can get stuck",
+    "text": "1.10 Where Louvain can get stuck\nLocal, one-node-at-a-time moves are fast, but they have a blind spot. Consider a community made of two strongly connected regions, joined to each other by only one weak edge.\n\n\n\n\n\n\n\nFigure 1.9: Six nodes, A through F, currently treated as one community. A, B, and C form a strong triangle. D, E, and F form another strong triangle. The two triangles are joined by only one weak edge, between C and D.\n\n\n\n\nFigure 1.9 shows six nodes, \\(A\\) through \\(F\\), currently grouped as one community. \\(A\\), \\(B\\), and \\(C\\) are strongly connected to each other, as are \\(D\\), \\(E\\), and \\(F\\). The only connection between the two halves is the weak edge between \\(C\\) and \\(D\\).\nAsk whether any single node benefits from leaving this community on its own. \\(A\\) is tightly held by its two strong edges to \\(B\\) and \\(C\\). Moving \\(A\\) out on its own would throw away those two strong connections in exchange for nothing, since \\(A\\) has no edges outside the group at all. The same is true for \\(B\\), \\(E\\), and \\(F\\). Even \\(C\\) and \\(D\\), sitting right at the boundary, would give up two strong internal edges each by leaving alone, and gain nothing from the single weak edge they would be leaving behind. No individual node wants to move. Local, one-node-at-a-time moves have nothing left to do.\nYet the two triangles are clearly better described as two separate communities than as one. The weak bridge should not be enough to justify treating six loosely related nodes as a single group. Louvain’s local moving step, examined one node at a time, cannot see this. Splitting \\(\\{A,B,C\\}\\) from \\(\\{D,E,F\\}\\) requires moving three nodes together, and no single one of those three moves is worth making on its own.\nThis is Louvain’s central weakness. Because it only ever reconsiders one node at a time, it can settle into a partition that keeps a community together for the wrong reason, namely that no individual member happens to benefit from leaving alone. In some graphs this same mechanism can leave a community internally disconnected altogether, since nothing in the local-moving step checks whether a community, once formed, is still one connected piece.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#leidens-answer-local-moving-refinement-aggregation",
+    "href": "intuition.html#leidens-answer-local-moving-refinement-aggregation",
+    "title": "1  Leiden clustering",
+    "section": "1.11 Leiden’s answer: local moving, refinement, aggregation",
+    "text": "1.11 Leiden’s answer: local moving, refinement, aggregation\nLeiden keeps Louvain’s overall structure but inserts an additional step.\n\nLocal moving. Move individual nodes between communities whenever doing so improves the partition, exactly as Louvain does.\nRefinement. Within each community found by local moving, look again at its internal structure and identify smaller, well-connected pieces.\nAggregation. Collapse each refined piece, not each original community, into a single node of a new, smaller graph.\nRepeat.\n\nThe purpose of refinement is to give the next round of local moving something better to work with. Local moving on the original six individual nodes could not split \\(\\{A,B,C\\}\\) from \\(\\{D,E,F\\}\\), because that split requires moving three nodes as a unit. Refinement identifies \\(\\{A,B,C\\}\\) and \\(\\{D,E,F\\}\\) as sensible pieces first. Aggregation then turns each of those pieces into a single node. On that new, smaller graph, a single local move can do what three coordinated moves could not.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#refinement-visually",
+    "href": "intuition.html#refinement-visually",
+    "title": "1  Leiden clustering",
+    "section": "1.12 Refinement visually",
+    "text": "1.12 Refinement visually\nLook again at the coarse community \\(ABCDEF\\) from Figure 1.9, and watch it get taken apart.\n\n\n\n\n\n\n\nFigure 1.10: Refinement examines a coarse community’s internal structure. Starting from the coarse community ABCDEF, its internal structure is inspected, ABC and DEF are identified as internally well-connected pieces, and those pieces are kept separate when the next graph is built.\n\n\n\n\nFigure 1.10 reads left to right. The first panel is the coarse community exactly as local moving left it, one single group. The second panel temporarily sets that grouping aside and looks only at the edges inside it. The third panel identifies \\(\\{A,B,C\\}\\) and \\(\\{D,E,F\\}\\) as two internally well-connected pieces, based on the strong triangle edges within each and the weak single edge between them. The fourth panel keeps those two pieces separate going forward.\nThis distinction matters and is easy to miss. Refinement does not simply mean splitting the final answer into smaller pieces at the end. It happens during the algorithm, before aggregation, and its output is used to build the next, smaller graph that the algorithm continues working on. The refined pieces are not yet the final clusters. They are the units that the next round of local moving is allowed to move as a whole.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#supernodes-visually",
+    "href": "intuition.html#supernodes-visually",
+    "title": "1  Leiden clustering",
+    "section": "1.13 Supernodes visually",
+    "text": "1.13 Supernodes visually\nRefinement produced two pieces, \\(X = \\{A,B,C\\}\\) and \\(Y = \\{D,E,F\\}\\). Aggregation turns each piece into a single node of a new, smaller graph.\n\n\n\n\n\n\n\nFigure 1.11: Left: the six nodes colored by their refined piece, with every edge weight shown. Right: the same structure collapsed into two supernodes, X and Y, joined by one edge whose weight summarizes the total connection between the two original groups.\n\n\n\n\nIn the right panel of Figure 1.11, \\(X\\) and \\(Y\\) are supernodes: single nodes that each stand in for a whole group of original nodes. The edge between them, with weight \\(0.2\\), summarizes the total connection between everything inside \\(X\\) and everything inside \\(D\\). Nothing about the original within-group structure is discarded. It is folded into the supernode and can be unfolded again once a final partition is reached.\nThis is the central mechanical trick behind Leiden. At the original level, the local moving step can only move one cell at a time. After refinement and aggregation, a single node in the new graph can represent an entire group of cells. The very same local-moving machinery, completely unchanged, can now move that whole group in one step, simply because it is now sitting behind one node instead of three. The coordinated three-node move that local moving could never find at the original level becomes an ordinary one-node move at the aggregated level.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#resolution",
+    "href": "intuition.html#resolution",
+    "title": "1  Leiden clustering",
+    "section": "1.14 Resolution",
+    "text": "1.14 Resolution\nEvery example so far has used one implicit sense of how much internal connection is enough to justify keeping nodes together. That threshold is controlled by a setting called the resolution.\n\n\n\n\n\n\n\nFigure 1.12: The same 220-point graph clustered at three resolutions. Low resolution merges everything into two broad groups. Moderate resolution recovers the four visually distinct groups. High resolution splits the graph further into eight smaller pieces.\n\n\n\n\nFigure 1.12 clusters the same graph three times, changing nothing but the resolution. At low resolution, the connections needed to justify a split are set high, so entire regions merge into two broad groups. At a moderate resolution, the four visually distinct groups from Figure 1.4 reappear cleanly. At high resolution, the bar for staying together is raised further, and even the round groups fracture into smaller pieces.\nIt is tempting to describe resolution as controlling the number of clusters directly, but that description gives the wrong intuition. Resolution changes the standard a group of nodes must meet before Leiden accepts them as sufficiently connected to be one community. A higher resolution demands stronger internal connection for a given group size before it is left ungrouped. The number of communities is a consequence of that standard, not something chosen directly.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#weighted-versus-unweighted-graphs",
+    "href": "intuition.html#weighted-versus-unweighted-graphs",
+    "title": "1  Leiden clustering",
+    "section": "1.15 Weighted versus unweighted graphs",
+    "text": "1.15 Weighted versus unweighted graphs\nEvery edge so far has carried a weight. Some graphs instead treat every edge as equally strong.\n\n\n\n\n\n\n\nFigure 1.13: Left: the same six-node graph with every edge drawn with identical thickness, ignoring weight. Right: the true weighted graph, where the bridge between C and D is visibly thinner than the six strong internal edges.\n\n\n\n\nIn the left panel of Figure 1.13, every edge counts the same, including the bridge between \\(C\\) and \\(D\\). In the right panel, that bridge is visibly weaker. A strong edge contributes more evidence for keeping two nodes together than a weak edge does. Leiden can use edge weights directly in its optimization, and doing so usually changes the result.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#stochasticity",
+    "href": "intuition.html#stochasticity",
+    "title": "1  Leiden clustering",
+    "section": "1.16 Stochasticity",
+    "text": "1.16 Stochasticity\nLeiden is a heuristic optimization procedure, not an exact solver that is guaranteed to find the single best partition of a graph. Its refinement step deliberately introduces some randomness, choosing among several good candidate moves rather than always taking the single best one. Running Leiden twice on the same graph with the same settings can therefore produce two partitions that are very similar but not identical, unless a random seed is fixed.\nIf two runs of Leiden on the same data give a different number of clusters, or place a handful of boundary cells differently, that is not automatically evidence that one of the runs found the biologically correct answer and the other did not. Cluster labels themselves carry no meaning beyond marking group membership. A cluster numbered 2 in one run has no necessary relationship to a cluster numbered 2 in another.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#when-graph-community-detection-is-useful",
+    "href": "intuition.html#when-graph-community-detection-is-useful",
+    "title": "1  Leiden clustering",
+    "section": "1.17 When graph community detection is useful",
+    "text": "1.17 When graph community detection is useful\nLeiden is a good choice when the observations naturally form a graph, when local neighbourhood structure carries information, when clusters may have irregular shapes that a centroid-based method would miss, and when the dataset is large enough that a sparse graph representation, connecting each point only to its nearest neighbours, is more practical than working with every pairwise distance. Single-cell data, represented as a nearest-neighbour or shared-nearest-neighbour graph over PCA coordinates, fits this description well. So do datasets where a network is the original data, such as a social network or a protein interaction network, with no coordinates involved at all.\nLeiden also has limitations. It always returns discrete, non-overlapping communities. If the underlying biology is a continuous progression, such as a differentiation trajectory with no natural break points, forcing Leiden to draw a boundary somewhere can create a division that does not correspond to any biological transition. The result also depends entirely on the graph it is given. A poor choice of principal components, an unsuitable number of neighbours, an uncorrected batch effect, or a distance metric that does not suit the data will all produce a poor graph, and Leiden has no way to recognize or repair a bad graph. It optimizes the partition of whatever graph it receives.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#leiden-is-not-linear-or-nonlinear",
+    "href": "intuition.html#leiden-is-not-linear-or-nonlinear",
+    "title": "1  Leiden clustering",
+    "section": "1.18 Leiden is not “linear” or “nonlinear”",
+    "text": "1.18 Leiden is not “linear” or “nonlinear”\nStudents often try to place every method they learn on a single axis running from linear to nonlinear. Leiden does not belong on that axis at all. It is not a dimensionality reduction method, linear or otherwise. It performs community detection directly on a graph, and the question of whether a projection is linear does not apply to it.\nThat said, the graph Leiden receives can represent structure that is highly nonlinear in the original feature space. A nearest-neighbour graph connects points that are close to each other locally, regardless of whether the overall shape of the data is curved, folded, or otherwise not expressible as a straight line or plane. This is why graph-based clustering can separate groups that are not linearly separable in the original coordinates, even though the method itself is not a projection of any kind.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#a-short-comparison-with-diffusion-maps",
+    "href": "intuition.html#a-short-comparison-with-diffusion-maps",
+    "title": "1  Leiden clustering",
+    "section": "1.18 A short comparison with Diffusion Maps",
+    "text": "1.18 A short comparison with Diffusion Maps\nYou may encounter Diffusion Maps in the same single-cell workflow.\nDiffusion Maps are a nonlinear dimensionality reduction method. They build a transition process on a graph and use its eigenvectors to summarize long-range connectivity, producing continuous coordinates that are especially useful for describing gradual, continuous structure such as a differentiation trajectory.\nLeiden instead produces discrete graph communities, with no continuous coordinate attached. A dataset containing several genuinely separated cell populations is naturally described by Leiden’s discrete communities. A dataset dominated by one continuous developmental progression may be better described by diffusion coordinates, trajectory inference, or pseudotime, rather than by interpreting every boundary Leiden happens to draw as a true, discrete biological state. Neither method is universally better. They answer different questions about the same graph.\nIn the next chapter you get to try graph clustering in R or Python.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html",
+    "href": "practice.html",
+    "title": "2  Leiden with R and Python",
+    "section": "",
+    "text": "2.1 Setup\nThis chapter applies Leiden to simulated data with a known grouping. The examples use established R and Python packages rather than reimplementing the algorithm. Because the correct grouping is known, we can see how each setting changes the result.\nThe R examples use igraph 2.3.1 for graphs and Leiden, bluster 1.20.0 for neighbour graphs, mclust for the adjusted Rand index, and Seurat 5.5.1 for a single cell workflow.\nThe Python examples use igraph 1.0.0, leidenalg 0.12.0, sklearn 1.9.1 for neighbour search and ARI, and scanpy 1.11.5 for a single cell workflow.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#packages-used-in-this-chapter",
+    "href": "practice.html#packages-used-in-this-chapter",
+    "title": "2  Leiden in R and Python",
+    "section": "",
+    "text": "ImportantTwo different Leiden entry points, in each language\n\n\n\nR’s igraph::cluster_leiden() and Python’s igraph.Graph.community_leiden() call the same underlying C library directly and share the same argument names and defaults. Python’s leidenalg.find_partition() is a separate package with a slightly different interface, most notably a resolution_parameter argument rather than resolution, and it is what Scanpy calls internally. We use both entry points in this chapter, since single-cell tools commonly go through leidenalg.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#the-adjusted-rand-index",
+    "href": "practice.html#the-adjusted-rand-index",
+    "title": "2  Leiden in R and Python",
+    "section": "2.2 The adjusted Rand index",
+    "text": "2.2 The adjusted Rand index\nSeveral sections below compare a Leiden clustering against a known true grouping, or two Leiden clusterings against each other. The adjusted Rand index, or ARI, measures agreement between two partitions of the same observations. It looks at every pair of observations and asks whether both partitions agree on whether the pair is together or apart, then corrects for the agreement expected by chance alone. An ARI of \\(1\\) means the two partitions agree perfectly, up to the arbitrary numbering of the groups. An ARI near \\(0\\) means the agreement is no better than a random partition would achieve. Unlike raw label matching, ARI does not care whether one partition calls a group 1 and the other calls it 3; only the grouping of observations matters.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#simulated-dataset-with-known-truth",
+    "href": "practice.html#simulated-dataset-with-known-truth",
+    "title": "2  Leiden in R and Python",
+    "section": "2.3 Simulated dataset with known truth",
+    "text": "2.3 Simulated dataset with known truth\nThe simulated dataset has 220 points in two dimensions, forming four communities of different shape and density: two interleaved crescents, a small tight group, and a larger, looser group. It is the same dataset shown in Chapter 1’s Figure 1.1, generated once with a fixed seed by scripts/generate_data.py and stored in data/leiden_demo.csv, so that R and Python load identical observations and identical true labels.\n\n\n\n\n\n\nNoteDownload the practice data\n\n\n\n\nSimulated demonstration dataset\nSix-node toy graph\n\nKeep the downloaded CSV files inside a folder named data when following the examples.\n\n\n\nRPython\n\n\ndemo &lt;- read.csv(\"data/leiden_demo.csv\")\ndim(demo)\nhead(demo, 3)\ntable(demo$true_community)\n[1] 220   4\n  id        x          y true_community\n1  1 1.986200 -0.4189657     crescent_2\n2  2 4.509723  1.5924648     dense_blob\n3  3 2.714331  0.3573930     crescent_2\n\ncrescent_1 crescent_2 dense_blob loose_blob\n        70         70         28         52\n\n\nimport pandas as pd\n\ndemo = pd.read_csv(\"data/leiden_demo.csv\")\nprint(demo.shape)\nprint(demo.head(3))\nprint(demo[\"true_community\"].value_counts())\n(220, 4)\n   id         x         y true_community\n0   1  1.986200 -0.418966     crescent_2\n1   2  4.509723  1.592465     dense_blob\n2   3  2.714331  0.357393     crescent_2\ntrue_community\ncrescent_2    70\ncrescent_1    70\nloose_blob    52\ndense_blob    28\nName: count, dtype: int64\n\n\n\nThe true_community column is used only to check the result. It is never given to Leiden. Leiden receives only the x and y coordinates, turned into a graph.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#building-the-graph-with-packages",
+    "href": "practice.html#building-the-graph-with-packages",
+    "title": "2  Leiden in R and Python",
+    "section": "2.4 Building the graph with packages",
+    "text": "2.4 Building the graph with packages\nWe construct a \\(k\\)-nearest-neighbour graph with \\(k = 15\\), using each language’s own graph-construction function rather than writing a neighbour search by hand.\n\nRPython\n\n\nlibrary(igraph)\nlibrary(bluster)\n\nX &lt;- as.matrix(demo[, c(\"x\", \"y\")])\ng &lt;- makeKNNGraph(X, k = 15)\nvcount(g)\necount(g)\nis_directed(g)\n[1] 220\n[1] 1925\n[1] FALSE\n\n\nimport numpy as np\nimport igraph as ig\nfrom sklearn.neighbors import NearestNeighbors\n\nX = demo[[\"x\", \"y\"]].to_numpy()\n\ndef knn_graph(X, k):\n    nn = NearestNeighbors(n_neighbors=k + 1).fit(X)\n    _, idx = nn.kneighbors(X)\n    edges = {(min(i, j), max(i, j))\n             for i in range(len(X)) for j in idx[i, 1:]}\n    return ig.Graph(n=len(X), edges=list(edges))\n\ng = knn_graph(X, k=15)\nprint(g.vcount(), g.ecount(), g.is_directed())\n220 1925 False\n\n\n\nbluster::makeKNNGraph() builds the graph directly from a coordinate matrix. Python’s igraph has no equivalent coordinate-to-graph convenience function, so we search for neighbours with scikit-learn and build the edge list ourselves, arriving at the same graph: 220 nodes and 1925 undirected edges. Because a \\(k\\)-nearest-neighbour relationship is not symmetric, as Chapter 1 discussed, the two matches, \\(i\\) among \\(j\\)’s neighbours and \\(j\\) among \\(i\\)’s, are merged into one undirected edge rather than two.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#running-leiden-and-comparing-to-the-truth",
+    "href": "practice.html#running-leiden-and-comparing-to-the-truth",
+    "title": "2  Leiden in R and Python",
+    "section": "2.5 Running Leiden and comparing to the truth",
+    "text": "2.5 Running Leiden and comparing to the truth\nWe cluster this graph with Leiden using a modularity-flavoured objective and resolution \\(0.15\\), a value we will justify in the next section.\n\nRPython\n\n\nset.seed(42)\npart &lt;- cluster_leiden(g, objective_function = \"modularity\",\n                        resolution = 0.15, n_iterations = 2)\nlength(unique(membership(part)))\ntable(membership(part))\n[1] 4\n\n 1  2  3  4\n70 28 52 70\n\n\nimport leidenalg as la\n\npart = la.find_partition(g, la.RBConfigurationVertexPartition,\n                          resolution_parameter=0.15, seed=42)\nprint(len(set(part.membership)))\nimport pandas as pd\nprint(pd.Series(part.membership).value_counts().sort_index())\n4\n0    70\n1    70\n2    52\n3    28\nName: count, dtype: int64\n\n\n\nBoth languages recover four clusters of sizes 70, 70, 52, and 28, matching the four true communities exactly, though the two languages number the clusters differently. Now compare against the truth with the adjusted Rand index.\n\nRPython\n\n\nlibrary(mclust)\nadjustedRandIndex(membership(part), demo$true_community)\n[1] 1\n\n\nfrom sklearn.metrics import adjusted_rand_score\n\nadjusted_rand_score(demo[\"true_community\"], part.membership)\n1.0\n\n\n\nAn ARI of \\(1\\) means perfect agreement with the true grouping, up to the arbitrary numbering of clusters. This particular resolution and neighbour count were not guessed. They come from the experiments in the next two sections.\n\n\n\n\n\n\n\nFigure 2.1: True communities on the left, the Leiden clustering on the right, at resolution 0.15 and k = 15. The two panels agree exactly, aside from color assignment.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#resolution-experiment",
+    "href": "practice.html#resolution-experiment",
+    "title": "2  Leiden with R and Python",
+    "section": "2.6 Resolution experiment",
+    "text": "2.6 Resolution experiment\nChapter 1’s Figure 1.12 showed the visual effect of changing the resolution. Here is the numerical version, saving every result rather than overwriting a single fitted object.\n\nRPython\n\n\nres_values &lt;- c(0.02, 0.05, 0.15, 0.5, 1.0)\nres_sweep &lt;- data.frame(resolution = res_values, n_clusters = NA_integer_, ARI = NA_real_)\nfor (i in seq_along(res_values)) {\n  set.seed(42)\n  p &lt;- cluster_leiden(g, objective_function = \"modularity\",\n                       resolution = res_values[i], n_iterations = 2)\n  res_sweep$n_clusters[i] &lt;- length(unique(membership(p)))\n  res_sweep$ARI[i] &lt;- round(adjustedRandIndex(membership(p), demo$true_community), 4)\n}\nres_sweep\n  resolution n_clusters    ARI\n1       0.02          3 0.5835\n2       0.05          3 0.5835\n3       0.15          4 1.0000\n4       0.50          6 0.7087\n5       1.00          7 0.6582\n\n\nrows = []\nfor res in [0.02, 0.05, 0.15, 0.5, 1.0]:\n    p = la.find_partition(g, la.RBConfigurationVertexPartition,\n                           resolution_parameter=res, seed=42)\n    lab = p.membership\n    rows.append({\"resolution\": res, \"n_clusters\": len(set(lab)),\n                 \"ARI\": round(adjusted_rand_score(demo[\"true_community\"], lab), 4)})\npd.DataFrame(rows)\n   resolution  n_clusters     ARI\n0        0.02           2  0.3495\n1        0.05           3  0.8119\n2        0.15           4  1.0000\n3        0.50           6  0.7278\n4        1.00           8  0.6089\n\n\n\nBoth languages show the same overall pattern. At very low resolution, the four communities merge into two or three broad groups. At resolution \\(0.15\\), both recover the truth exactly. Above that, both fragment the true communities further, reaching six to eight small clusters by resolution \\(1\\), the default value in most implementations. The exact cluster counts at \\(0.02\\) differ slightly between R and Python because igraph and leidenalg are different optimization implementations working on the same objective, and small differences of this kind are expected. Neither implementation is more correct than the other here. The important lesson is the shape of the curve, not any single digit: resolution should not be chosen by maximizing it, and the value that happens to match a known truth in a simulation will not be known in advance on real data.\n\n\n\n\n\n\nImportantThe package default is not automatically a good choice\n\n\n\nResolution \\(1.0\\), the default in most implementations, gives 7 or 8 clusters here, clearly over-splitting the four true communities. A package default reflects a general-purpose choice, not a value tuned to any particular dataset or graph.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#neighbour-parameter-experiment",
+    "href": "practice.html#neighbour-parameter-experiment",
+    "title": "2  Leiden with R and Python",
+    "section": "2.7 Neighbour parameter experiment",
+    "text": "2.7 Neighbour parameter experiment\nNow hold the resolution fixed at \\(0.15\\) and vary \\(k\\), the number of neighbours used to build the graph.\n\nRPython\n\n\nk_values &lt;- c(3, 5, 8, 10, 15, 20, 30, 50)\nk_sweep &lt;- data.frame(k = k_values, n_edges = NA_integer_,\n                       n_clusters = NA_integer_, ARI = NA_real_)\nfor (i in seq_along(k_values)) {\n  gk &lt;- makeKNNGraph(X, k = k_values[i])\n  set.seed(42)\n  p &lt;- cluster_leiden(gk, objective_function = \"modularity\",\n                       resolution = 0.15, n_iterations = 2)\n  k_sweep$n_edges[i] &lt;- ecount(gk)\n  k_sweep$n_clusters[i] &lt;- length(unique(membership(p)))\n  k_sweep$ARI[i] &lt;- round(adjustedRandIndex(membership(p), demo$true_community), 4)\n}\nk_sweep\n   k n_edges n_clusters    ARI\n1  3     423         11 0.5627\n2  5     676          7 0.6722\n3  8    1058          5 0.8634\n4 10    1289          5 0.8634\n5 15    1925          4 1.0000\n6 20    2549          4 1.0000\n7 30    3767          3 0.5681\n8 50    6271          2 0.3776\n\n\nrows = []\nfor k in [3, 5, 8, 10, 15, 20, 30, 50]:\n    gk = knn_graph(X, k)\n    p = la.find_partition(gk, la.RBConfigurationVertexPartition,\n                           resolution_parameter=0.15, seed=42)\n    lab = p.membership\n    rows.append({\"k\": k, \"n_edges\": gk.ecount(), \"n_clusters\": len(set(lab)),\n                 \"ARI\": round(adjusted_rand_score(demo[\"true_community\"], lab), 4)})\npd.DataFrame(rows)\n    k  n_edges  n_clusters     ARI\n0   3      423          11  0.5627\n1   5      676           7  0.6722\n2   8     1058           5  0.8634\n3  10     1289           5  0.8634\n4  15     1925           4  1.0000\n5  20     2549           3  0.8119\n6  30     3767           3  0.5681\n7  50     6271           2  0.3776\n\n\n\nToo few neighbours, \\(k=3\\) or \\(5\\), gives a sparse, fragmented graph and Leiden splits the truth into far more pieces than exist. Around \\(k=15\\), both languages recover the truth well. Beyond that, the graph becomes dense enough that even weak, incidental connections between different true communities start to compete with the strong internal connections, and clusters begin to merge together, dropping the cluster count below four. R happens to still recover the truth exactly at \\(k=20\\) while Python’s implementation merges one pair of communities at that setting; this is the same kind of small optimizer difference seen in the resolution sweep, not evidence that one graph construction is wrong.\nThis experiment changed only \\(k\\), holding resolution fixed throughout, while the previous experiment changed only resolution, holding \\(k\\) fixed. The two parameters clearly are not interchangeable: this sweep shows the number of neighbours reshaping the graph itself, changing the edge count from 423 to 6271, while the resolution sweep changed nothing about the graph and only changed how it was partitioned.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#weighted-and-unweighted-graphs",
+    "href": "practice.html#weighted-and-unweighted-graphs",
+    "title": "2  Leiden with R and Python",
+    "section": "2.8 Weighted and unweighted graphs",
+    "text": "2.8 Weighted and unweighted graphs\nmakeKNNGraph() in R produces an unweighted graph, with no weight edge attribute at all. bluster::makeSNNGraph() instead builds a shared-nearest-neighbour graph with a Jaccard-based edge weight, matching Chapter 1’s Figure 1.6. In Python, we attach a Gaussian-kernel weight based on distance. Both are legitimate ways of adding weight to a graph, and this section shows that either can change the result compared to the unweighted graph built from the same coordinates.\n\nRPython\n\n\ng_unw &lt;- makeKNNGraph(X, k = 20)\ng_w &lt;- makeSNNGraph(X, k = 20, type = \"jaccard\")\n\nset.seed(42)\np_unw &lt;- cluster_leiden(g_unw, objective_function = \"modularity\",\n                         resolution = 0.05, n_iterations = 2)\nset.seed(42)\np_w &lt;- cluster_leiden(g_w, objective_function = \"modularity\",\n                       resolution = 0.05, n_iterations = 2)\n\ncat(\"unweighted:\", length(unique(membership(p_unw))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_unw), demo$true_community), 4), \"\\n\")\ncat(\"weighted (SNN):\", length(unique(membership(p_w))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_w), demo$true_community), 4), \"\\n\")\nunweighted: 2 clusters, ARI = 0.3495\nweighted (SNN): 3 clusters, ARI = 0.5835\n\n\ndef knn_graph_weighted(X, k):\n    nn = NearestNeighbors(n_neighbors=k + 1).fit(X)\n    dist, idx = nn.kneighbors(X)\n    sigma = np.median(dist[:, 1:])\n    edges = {}\n    for i in range(len(X)):\n        for jj in range(1, k + 1):\n            j = idx[i, jj]\n            key = (min(i, j), max(i, j))\n            w = np.exp(-(dist[i, jj] ** 2) / (2 * sigma ** 2))\n            if key not in edges or w &gt; edges[key]:\n                edges[key] = w\n    gg = ig.Graph(n=len(X), edges=list(edges.keys()))\n    gg.es[\"weight\"] = list(edges.values())\n    return gg\n\ng_unw = knn_graph(X, 20)\ng_w = knn_graph_weighted(X, 20)\n\np_unw = la.find_partition(g_unw, la.RBConfigurationVertexPartition,\n                           resolution_parameter=0.1, seed=42)\np_w = la.find_partition(g_w, la.RBConfigurationVertexPartition,\n                         resolution_parameter=0.1, weights=\"weight\", seed=42)\nprint(\"unweighted:\", len(set(p_unw.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_unw.membership), 4))\nprint(\"weighted:\", len(set(p_w.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_w.membership), 4))\nunweighted: 3 clusters, ARI = 0.8119\nweighted: 4 clusters, ARI = 1.0\n\n\n\nIn both languages, adding weight to the graph changes the clustering at these settings, and in both cases the weighted graph gives the better result. The two examples use different weighting schemes: R’s makeSNNGraph() weights each edge by the Jaccard overlap of shared neighbours, while the Python example weights each edge with a Gaussian kernel applied to distance. This is why the two examples use different resolution values and show a different-sized effect; they are not measuring the identical quantity, only the same general idea, that edge weight is additional information Leiden can use.\n\n\n\n\n\n\nNoteweights and use_weights\n\n\n\nIn R, cluster_leiden()’s weights argument defaults to NULL, which automatically uses a graph’s weight edge attribute if one is present, or treats the graph as unweighted if not. Passing weights = NA forces an unweighted run even when a weight attribute exists. In Python, leidenalg.find_partition() does not auto-detect a weight attribute; it must be passed explicitly, either as an attribute name string, weights=\"weight\", or as an explicit list of values.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#random-seed-and-stability",
+    "href": "practice.html#random-seed-and-stability",
+    "title": "2  Leiden with R and Python",
+    "section": "2.9 Random seed and stability",
+    "text": "2.9 Random seed and stability\nLeiden’s refinement step is stochastic, as Chapter 1 explained. We run the same graph and resolution ten times, changing only the random seed, at a resolution high enough to show real variation.\n\nRPython\n\n\nseed_labels &lt;- list()\nfor (seed in 0:9) {\n  set.seed(seed)\n  p &lt;- cluster_leiden(g, objective_function = \"modularity\",\n                       resolution = 0.5, n_iterations = 2)\n  seed_labels[[as.character(seed)]] &lt;- membership(p)\n}\nsapply(seed_labels, function(m) length(unique(m)))\nsapply(seed_labels[-1], function(m) round(adjustedRandIndex(m, seed_labels[[\"0\"]]), 4))\n     0      1      2      3      4      5      6      7      8      9\n     6      6      6      6      6      6      6      6      6      6\n\n     1      2      3      4      5      6      7      8      9\n1.0000 1.0000 1.0000 1.0000 1.0000 0.8923 1.0000 1.0000 0.9898\n\n\nseed_labels = []\nfor seed in range(10):\n    p = la.find_partition(g, la.RBConfigurationVertexPartition,\n                           resolution_parameter=0.5, seed=seed)\n    seed_labels.append(p.membership)\n\n[len(set(lab)) for lab in seed_labels]\n[round(adjusted_rand_score(seed_labels[0], lab), 4) for lab in seed_labels[1:]]\n[6, 6, 6, 6, 6, 6, 6, 6, 6, 6]\n[0.8923, 0.8923, 0.8923, 0.8923, 0.8923, 0.8923, 0.8923, 0.8348, 0.8923]\n\n\n\nThe number of clusters is stable at six across every seed, in both languages, but individual observations near cluster boundaries do move between runs: the pairwise ARI against the first seed’s result ranges from about \\(0.83\\) to \\(1.0\\), not always exactly \\(1.0\\). This is expected stochastic variation from refinement’s randomized merge selection, not an error. A stable cluster count across seeds shows that the optimization reaches a similar answer repeatedly for this graph and resolution. It does not, by itself, show that the answer is biologically or scientifically correct; it only shows that the search is not wandering to wildly different solutions.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#cpm-and-modularity-in-packages",
+    "href": "practice.html#cpm-and-modularity-in-packages",
+    "title": "2  Leiden with R and Python",
+    "section": "2.10 CPM and modularity in packages",
+    "text": "2.10 CPM and modularity in packages\nChapter 3 introduced CPM and modularity as two different objective functions Leiden can optimize. Packages do not agree on a single default.\n\nRPython\n\n\nset.seed(42)\np_cpm &lt;- cluster_leiden(g, objective_function = \"CPM\", resolution = 0.15, n_iterations = 2)\nset.seed(42)\np_mod &lt;- cluster_leiden(g, objective_function = \"modularity\", resolution = 1.0, n_iterations = 2)\ncat(\"CPM (resolution 0.15):\", length(unique(membership(p_cpm))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_cpm), demo$true_community), 4), \"\\n\")\ncat(\"modularity (resolution 1):\", length(unique(membership(p_mod))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_mod), demo$true_community), 4), \"\\n\")\nCPM (resolution 0.15): 9 clusters, ARI = 0.5698\nmodularity (resolution 1): 7 clusters, ARI = 0.6582\n\n\np_cpm = la.find_partition(g, la.CPMVertexPartition, resolution_parameter=0.15, seed=42)\np_mod = la.find_partition(g, la.ModularityVertexPartition, seed=42)\nprint(\"CPM (resolution 0.15):\", len(set(p_cpm.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_cpm.membership), 4))\nprint(\"modularity (no resolution):\", len(set(p_mod.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_mod.membership), 4))\nCPM (resolution 0.15): 10 clusters, ARI = 0.5362\nmodularity (no resolution): 8 clusters, ARI = 0.6089\n\n\n\nleidenalg.ModularityVertexPartition implements classic modularity with no adjustable resolution at all, fixed at the equivalent of resolution \\(1\\), which is why the R comparison uses resolution = 1 for its modularity run. Neither setting here recovers the truth as well as the earlier resolution-\\(0.15\\), modularity-objective run did. This is not a contradiction; it shows that resolution \\(0.15\\) was tuned specifically for the modularity-flavoured objective used earlier in the chapter, and a resolution chosen for one objective function does not automatically transfer to a different one.\n\n\n\n\n\n\nImportantThe direct graph-level functions default to CPM\n\n\n\nCalling igraph::cluster_leiden() or igraph.Graph.community_leiden() with no objective_function argument uses CPM, at resolution \\(1\\), by default in both languages. On an unweighted graph with unit edge weights, this default is usually far too strict, since CPM’s merge condition from Chapter 3, \\(E(R,S) &gt; \\gamma|R||S|\\), requires individual edges to exceed \\(\\gamma\\) itself. The next block shows what happens.\n\n\n\nRPython\n\n\nset.seed(42)\np_default &lt;- cluster_leiden(g)\nlength(unique(membership(p_default)))\nhead(sort(table(membership(p_default)), decreasing = TRUE), 5)\n[1] 220\n\n  1   2   3   4   5\n  1   1   1   1   1\n\n\nvc = g.community_leiden(objective_function=\"CPM\", resolution=1.0, n_iterations=2)\nlen(vc)\nsorted(vc.sizes(), reverse=True)[:5]\n220\n[1, 1, 1, 1, 1]\n\n\n\nWith the default CPM resolution of \\(1\\) on this unweighted graph, every single edge has weight \\(1\\), exactly equal to \\(\\gamma\\), so no merge in Step 9’s formula from Chapter 3 ever produces a positive gain. The result is 220 singleton clusters, one per observation. This is not a bug. It is the direct, predictable consequence of the CPM formula given a resolution that is too large for the scale of the edge weights involved. It is also why this chapter used resolution = 0.15 throughout the modularity-objective examples, and why Scanpy and Seurat, covered next, apply their own different defaults rather than leaving users to discover this by trial and error.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#r-practical-interfaces",
+    "href": "practice.html#r-practical-interfaces",
+    "title": "2  Leiden with R and Python",
+    "section": "2.11 R practical interfaces",
+    "text": "2.11 R practical interfaces\nThe direct graph-level function is igraph::cluster_leiden(), already used throughout this chapter. Its most important arguments are worth summarizing together.\n\nobjective_function: \"CPM\" (the default) or \"modularity\".\nweights: NULL auto-detects a weight edge attribute if present; NA forces an unweighted run.\nresolution: the resolution parameter, default \\(1\\). This replaces the older resolution_parameter argument, now deprecated.\nbeta: controls randomness in the refinement step, corresponding to \\(\\theta\\) in Chapter 3’s notation. Default \\(0.01\\).\ninitial_membership: a starting partition; defaults to singletons if not supplied.\nn_iterations: how many full passes of the algorithm to run; default \\(2\\).\n\nR also has no built-in randomness control comparable to Python’s explicit seed= argument on find_partition(); reproducibility in R comes from calling set.seed() before cluster_leiden(), since the function draws on R’s global random number generator.\n\n2.11.1 A single-cell style interface: Seurat\nSeurat provides Leiden through its ordinary graph-clustering interface, FindNeighbors() followed by FindClusters(algorithm = 4). Since Seurat expects a dimensionality-reduced embedding stored inside a Seurat object, we inject our two toy coordinates as though they were a two-dimensional PCA embedding, to demonstrate the interface without running a full preprocessing pipeline; Chapter 4 uses this interface on real gene expression data from the beginning.\nlibrary(Seurat)\n\nX_named &lt;- X\nrownames(X_named) &lt;- demo$id\ncolnames(X_named) &lt;- c(\"toy_1\", \"toy_2\")\n\ndummy_counts &lt;- matrix(1, nrow = 3, ncol = nrow(X_named),\n                        dimnames = list(c(\"g1\", \"g2\", \"g3\"), demo$id))\nobj &lt;- CreateSeuratObject(counts = dummy_counts)\nobj[[\"toy\"]] &lt;- CreateDimReducObject(embeddings = X_named, key = \"toy_\",\n                                      assay = DefaultAssay(obj))\n\nobj &lt;- FindNeighbors(obj, reduction = \"toy\", dims = 1:2, k.param = 15)\nobj &lt;- FindClusters(obj, algorithm = 4, resolution = 0.2)\n\nlength(unique(Idents(obj)))\nadjustedRandIndex(Idents(obj), demo$true_community)\nnames(obj@graphs)\n[1] 4\n[1] 0.9022\n[1] \"RNA_nn\" \"RNA_snn\"\nalgorithm = 4 selects Leiden. Seurat’s current default Leiden backend, controlled by leiden_method, is \"leidenbase\", a pure R and C++ package that does not require Python or reticulate; the alternative, leiden_method = \"igraph\", calls igraph::cluster_leiden() directly and accepts leiden_objective_function = \"CPM\" as well as the default \"modularity\". FindNeighbors() builds a shared-nearest-neighbour graph by default, stored as RNA_snn, using Jaccard-weighted overlap between each cell’s k.param nearest neighbours, and it is this SNN graph, not the plain KNN graph RNA_nn, that FindClusters() clusters. Note that resolution \\(0.2\\) here, not \\(0.15\\), gives the best result: Seurat’s SNN graph is a different graph from the plain KNN graph used earlier in this chapter, and a resolution value tuned for one graph does not automatically transfer to a different graph construction, exactly as the objective-function comparison above showed for CPM and modularity.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#python-practical-interfaces",
+    "href": "practice.html#python-practical-interfaces",
+    "title": "2  Leiden with R and Python",
+    "section": "2.12 Python practical interfaces",
+    "text": "2.12 Python practical interfaces\nThe direct graph-level function is igraph.Graph.community_leiden(), with the same objective function, resolution, and beta arguments as R’s cluster_leiden(). leidenalg.find_partition(), used throughout this chapter, is a separate implementation with a partition-type object in place of a plain objective_function string, and an explicit resolution_parameter argument rather than resolution.\n\npartition_type: e.g. la.RBConfigurationVertexPartition (modularity-style, resolution enabled), la.CPMVertexPartition, or la.ModularityVertexPartition (classic modularity, no resolution).\nweights: an edge attribute name or an explicit list; not auto-detected.\nn_iterations: default \\(2\\); a negative value runs until an iteration produces no further improvement.\nseed: an explicit integer for reproducibility; if omitted, a random seed is used and results are not reproducible run to run.\n\n\n2.12.1 A single-cell style interface: Scanpy\nScanpy’s usual sequence is sc.pp.neighbors() followed by sc.tl.leiden(). As with the Seurat example, we inject our toy coordinates in place of a real PCA embedding.\nimport anndata as ad\nimport scanpy as sc\n\nadata = ad.AnnData(X=np.zeros((len(X), 3), dtype=np.float32))\nadata.obs_names = demo[\"id\"].astype(str)\nadata.obsm[\"X_pca\"] = X\n\nsc.pp.neighbors(adata, n_neighbors=15, use_rep=\"X_pca\", random_state=0)\nsc.tl.leiden(adata, resolution=0.05, key_added=\"leiden_0.05\",\n             random_state=0, flavor=\"igraph\", n_iterations=2, directed=False)\n\nadata.obs[\"leiden_0.05\"].nunique()\nadjusted_rand_score(demo[\"true_community\"], adata.obs[\"leiden_0.05\"])\n4\n1.0\nsc.pp.neighbors() defaults to n_neighbors=15 and stores its result in two places: adata.obsp[\"distances\"], the raw kNN distances, and adata.obsp[\"connectivities\"], a weighted, symmetrized graph built with the same fuzzy-simplicial-set construction UMAP uses. sc.tl.leiden() clusters connectivities by default, not distances.\n\n\n\n\n\n\nImportantScanpy’s defaults are changing between versions\n\n\n\nAt the time of writing, sc.tl.leiden()’s default flavor is still \"leidenalg\", with n_iterations=-1, meaning run until convergence rather than a fixed two passes. A FutureWarning already announces a coming change to flavor=\"igraph\", which additionally requires directed=False and, following the package’s own recommendation, n_iterations=2. The example above already uses the forward-looking settings, flavor=\"igraph\", n_iterations=2, directed=False, matching current single-cell best-practice guidance. Regardless of flavor, Scanpy’s effective default objective is modularity-flavoured, not CPM: it sets partition_type=leidenalg.RBConfigurationVertexPartition under flavor=\"leidenalg\", and explicitly overrides objective_function=\"modularity\" under flavor=\"igraph\". This differs from calling igraph.Graph.community_leiden() directly, whose own default is CPM, as shown earlier in this chapter. Specify these arguments explicitly in your own code rather than relying on a default that may change.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#what-does-the-package-return",
+    "href": "practice.html#what-does-the-package-return",
+    "title": "2  Leiden with R and Python",
+    "section": "2.13 What does the package return?",
+    "text": "2.13 What does the package return?\nBoth languages give access to the same basic pieces of information: which community each observation was assigned to, how many communities were found, some measure of partition quality, and the sizes of each community.\n\nRPython\n\n\nmembership(part)[1:10]     # community label per node\nlength(unique(membership(part)))   # number of communities\npart$quality                       # objective value at the optimum\ntable(membership(part))            # cluster sizes\n [1] 4 3 4 1 4 1 3 1 4 1\n[1] 4\n[1] 0.9427\n 1  2  3  4\n70 28 52 70\n\n\npart.membership[:10]     # community label per node\nlen(set(part.membership))          # number of communities\npart.quality()                     # objective value at the optimum\npd.Series(part.membership).value_counts().sort_index()\n[3, 1, 3, 0, 2, 0, 1, 0, 3, 0]\n4\n3629.3229\n0    70\n1    70\n2    52\n3    28\nName: count, dtype: int64\n\n\n\nNote that part$quality in R and part.quality() in Python are on different numeric scales: igraph’s R implementation normalizes its reported quality, while leidenalg’s Python implementation reports the raw, unnormalized objective value. Neither number is meaningful in isolation. Both are only useful for comparing two partitions found on the same graph with the same objective function and resolution, which is exactly how they were used throughout this chapter’s sweeps.\nFor the Seurat and Scanpy interfaces, cluster labels are stored directly on the object: Idents(obj) for Seurat, and adata.obs[\"leiden_0.05\"] for Scanpy, alongside the neighbour graphs themselves, obj@graphs and adata.obsp[\"connectivities\"], which can be inspected or reused independently of the clustering step.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#what-to-carry-forward",
+    "href": "practice.html#what-to-carry-forward",
+    "title": "2  Leiden with R and Python",
+    "section": "2.14 What to carry forward",
+    "text": "2.14 What to carry forward\nEvery experiment in this chapter used the same two ingredients from Chapter 3: a graph, built with a chosen number of neighbours and an optional weighting scheme, and an objective function, evaluated at a chosen resolution. Changing the graph and changing the resolution moved the result in different, non-interchangeable ways. Different packages default to different objective functions and different resolution scales, and a value that works well for one combination does not automatically transfer to another. The next chapter applies exactly this same set of tools to a real single-cell dataset, where the true grouping is not known in advance.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html",
+    "href": "mathematics.html",
+    "title": "3  How Leiden works mathematically",
+    "section": "",
+    "text": "3.1 The running example\nWe reuse the graph from Chapter 1 with six nodes, two triangles, and one weak edge.\n\\[A,B,C,D,E,F, \\qquad\nw_{AB}=w_{AC}=w_{BC}=1,\\]\n\\[w_{DE}=w_{DF}=w_{EF}=1,\n\\qquad\nw_{CD}=0.2.\\]",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#the-running-example",
+    "href": "mathematics.html#the-running-example",
+    "title": "3  How Leiden works mathematically",
+    "section": "",
+    "text": "Figure 3.1: The running example has two strongly connected triangles, ABC and DEF, joined by one weak edge between C and D.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-1-representing-the-graph",
+    "href": "mathematics.html#step-1-representing-the-graph",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.2 Step 1: representing the graph",
+    "text": "3.2 Step 1: representing the graph\nA graph is a pair \\(G = (V, E)\\), where \\(V\\) is the set of nodes and \\(E\\) is the set of edges between them. For our example, \\(V = \\{A,B,C,D,E,F\\}\\).\nThe graph is fully described by its weighted adjacency matrix \\(A\\), a square matrix with one row and one column per node. Entry \\(A_{ij}\\) is the weight of the edge between node \\(i\\) and node \\(j\\), or \\(0\\) if no edge exists.\n\n\n\n\n\n\n\nFigure 3.2: The 6 by 6 weighted adjacency matrix of the running example.\n\n\n\n\nFigure 3.2 gives the full matrix. The graph is undirected, so \\(A_{ij} = A_{ji}\\) for every pair. The diagonal is zero because the graph has no self connections.\nThe weighted degree, or strength, of node \\(i\\) is the sum of the weights of all its edges.\n\\[k_i = \\sum_j A_{ij}.\\]\n\n\n\n\n\n\n\nFigure 3.3: Weighted degree of every node. A, B, E, F have degree 2. C and D, touching the weak bridge, have degree 2.2.\n\n\n\n\nFor \\(A\\), only two edges touch it, each of weight \\(1\\), so \\(k_A = 1 + 1 = 2\\). The same holds for \\(B\\), \\(E\\), and \\(F\\). \\(C\\) touches two strong edges and the weak bridge, so \\(k_C = 1 + 1 + 0.2 = 2.2\\). By symmetry \\(k_D = 2.2\\) as well. Figure 3.3 shows all six values.\nSumming every entry of the adjacency matrix counts every edge weight twice, once from each endpoint. Half of that total is the total edge weight, usually written \\(m\\).\n\\[2m = \\sum_i k_i, \\qquad m = \\frac{1}{2}\\sum_i k_i.\\]\nFor this graph, \\(\\sum_i k_i = 2+2+2.2+2.2+2+2 = 12.4\\), so \\(2m = 12.4\\) and \\(m = 6.2\\). Directly summing the six edges of weight \\(1\\) and the edge of weight \\(0.2\\) also gives \\(6.2\\). Thus \\(2m\\) can be found by summing the degrees or by doubling the total edge weight.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-2-an-objective-function",
+    "href": "mathematics.html#step-2-an-objective-function",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.3 Step 2: an objective function",
+    "text": "3.3 Step 2: an objective function\nLeiden compares candidate partitions using an objective function, also called a quality function. Leiden is the optimization algorithm. Modularity and the Constant Potts Model are two objectives it can optimize.\n\\[\\boxed{\\text{Leiden = optimization algorithm.}}\n\\qquad\n\\boxed{\\text{modularity or CPM = objective function.}}\\]\n\n3.3.1 Building modularity\nModularity compares the observed graph with a random graph that keeps the same degree sequence but places edges without regard to community structure. A partition scores well when its communities contain more internal edge weight than this baseline predicts.\nStart from one pair of nodes, \\(i\\) and \\(j\\). The actual connection between them is \\(A_{ij}\\), the entry of the adjacency matrix. The expected connection between \\(i\\) and \\(j\\) under the random baseline, if edges were placed independently in proportion to each node’s degree, is\n\\[\\frac{k_i k_j}{2m}.\\]\nA node with a larger degree \\(k_i\\) is expected to have stronger connections because it has more edge weight to distribute. The denominator \\(2m\\) normalizes these expectations so their sum matches the total edge weight. The difference\n\\[A_{ij} - \\gamma\\frac{k_i k_j}{2m}\\]\nis positive when \\(i\\) and \\(j\\) are connected more strongly than the baseline predicts and negative when they are connected more weakly. The resolution parameter \\(\\gamma\\) controls the weight given to the baseline. Its effect is discussed again in the practical points section.\nModularity counts this difference only when \\(i\\) and \\(j\\) are in the same community. Use the indicator\n\\[\\delta(c_i, c_j) =\n\\begin{cases}\n1 & \\text{if } i \\text{ and } j \\text{ are in the same community} \\\\\n0 & \\text{otherwise,}\n\\end{cases}\\]\nwhere \\(c_i\\) denotes the community assigned to node \\(i\\). Summing this quantity over every ordered pair of nodes and normalizing by \\(2m\\) gives modularity.\n\\[\\boxed{\nQ = \\frac{1}{2m} \\sum_{i,j} \\left( A_{ij} - \\gamma \\frac{k_i k_j}{2m} \\right) \\delta(c_i, c_j).\n}\\]\n\\(A_{ij}\\) is the actual edge weight between \\(i\\) and \\(j\\), \\(k_i\\) and \\(k_j\\) are their degrees, \\(m\\) is the total edge weight, \\(\\gamma\\) is the resolution, and \\(\\delta(c_i,c_j)\\) restricts the sum to pairs in the same community.\n\n\n3.3.2 Why the null model matters\nIf modularity only summed \\(A_{ij}\\) over pairs in the same community, placing every node in one community would maximize the score. The term \\(\\gamma k_ik_j/2m\\) corrects for the connections expected from node degree. Internal connections contribute useful evidence only when they exceed that expectation.\n\n\n3.3.3 The community form\nFor hand calculation, the double sum can be rewritten by community. Let \\(C\\) range over the communities of the partition and define\n\\[e_C = \\sum_{\\{i,j\\} \\subseteq C,\\ i&lt;j} A_{ij}\\]\nas the total internal edge weight of \\(C\\), counting each undirected edge once, and\n\\[K_C = \\sum_{i \\in C} k_i\\]\nas the sum of the degrees of the nodes in \\(C\\). The double sum \\(\\sum_{i,j} A_{ij}\\,\\delta(c_i,c_j)\\) runs over ordered pairs within the same community. It counts every internal edge twice and gives \\(2e_C\\). Likewise, \\(\\sum_{i,j} k_ik_j\\,\\delta(c_i,c_j) = K_C^2\\). Substitution gives\n\\[\\boxed{\nQ = \\frac{1}{2m}\\sum_C \\left(2e_C - \\gamma\\,\\frac{K_C^2}{2m}\\right).\n}\\]\nThe factor of \\(2\\) appears because the original sum uses ordered pairs while \\(e_C\\) counts each edge once.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-3-the-constant-potts-model",
+    "href": "mathematics.html#step-3-the-constant-potts-model",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.4 Step 3: the Constant Potts Model",
+    "text": "3.4 Step 3: the Constant Potts Model\nModularity’s random baseline, \\(k_ik_j/2m\\), depends on node degree and on the whole graph through \\(m\\). This creates the resolution limit. In a large graph, modularity can fail to separate small communities when their merger scores better under the degree based baseline.\nThe Constant Potts Model, or CPM, replaces the degree based baseline with a single constant. Instead of asking whether two nodes are connected more than their degrees would predict, CPM compares their connection with a fixed density threshold \\(\\gamma\\).\nFor nodes of unit size, the community form of CPM is\n\\[\\boxed{\nQ_{\\mathrm{CPM}} = \\sum_C \\left( e_C - \\gamma \\binom{n_C}{2} \\right),\n}\\]\nHere \\(e_C\\) is the internal edge weight counted once per edge, \\(n_C\\) is the number of nodes in \\(C\\), and \\(\\binom{n_C}{2} = \\frac{n_C(n_C-1)}{2}\\) is the number of possible pairs inside \\(C\\). The penalty \\(\\gamma\\binom{n_C}{2}\\) depends only on the size of the community. It does not change when unrelated parts of the graph grow, which avoids the modularity resolution limit. The parameter \\(\\gamma\\) still determines the scale of the communities.\nThis chapter counts each undirected edge once. Python leidenalg sums over ordered node pairs and reports twice this CPM value. Multiplying every score and every gain by two does not change which moves improve the objective.\nThe remaining derivation uses CPM with \\(\\gamma = 0.24\\) because its community form can be calculated directly at each step.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-4-initializing-the-partition",
+    "href": "mathematics.html#step-4-initializing-the-partition",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.5 Step 4: initializing the partition",
+    "text": "3.5 Step 4: initializing the partition\nWhen no starting partition is supplied, Leiden begins with each node in a singleton community. Later iterations use the partition from the preceding iteration. A user can also provide a starting partition through initial_membership.\nThis example starts from the coarse partition\n\\[P = \\{\\{A,B,C,D,E,F\\}\\}\\]\nwith all six nodes in one community. This starting point creates a local optimum that individual node moves cannot escape. It lets us examine the role of refinement and aggregation.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-5-the-cpm-score-of-the-coarse-partition",
+    "href": "mathematics.html#step-5-the-cpm-score-of-the-coarse-partition",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.6 Step 5: the CPM score of the coarse partition",
+    "text": "3.6 Step 5: the CPM score of the coarse partition\nThe coarse partition has one community containing all six nodes. Its internal edge weight, summing every edge in the graph once, is\n\\[e = 1+1+1+1+1+1+0.2 = 6.2.\\]\nSix nodes give \\(\\binom{6}{2} = 15\\) possible pairs. With \\(\\gamma = 0.24\\),\n\\[Q_{\\mathrm{coarse}} = e - \\gamma\\binom{6}{2} = 6.2 - (0.24)(15) = 6.2 - 3.6 = 2.6.\\]",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-6-local-moving",
+    "href": "mathematics.html#step-6-local-moving",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.7 Step 6: local moving",
+    "text": "3.7 Step 6: local moving\nLocal moving considers, one node at a time, whether moving that node to a different community would raise the objective. For a node \\(v\\) currently in community \\(R\\), and a candidate destination community \\(C\\), define\n\\[w(v, C) = \\sum_{j \\in C} w_{vj}\\]\nas the total edge weight from \\(v\\) to the members of \\(C\\), and \\(w(v, R\\setminus\\{v\\})\\) as the total edge weight from \\(v\\) to the rest of its current community, excluding itself.\nFirst consider an unassigned singleton \\(v\\) joining a community \\(C\\). The move adds \\(w(v,C)\\) of internal edge weight. It also increases the size of \\(C\\) from \\(n_C\\) to \\(n_C + 1\\), raising the penalty by \\(\\gamma\\left[\\binom{n_C+1}{2} - \\binom{n_C}{2}\\right] = \\gamma\\,n_C\\). Since \\(n_C = |C|\\) before the move,\n\\[\\boxed{\n\\Delta Q = w(v,C) - \\gamma\\,|C|.\n}\\]\nNow let \\(v\\) move from its current community \\(R\\) to a different community \\(C\\). Leaving \\(R\\) removes \\(w(v, R\\setminus\\{v\\})\\) of internal edge weight. It also lowers the penalty on \\(R\\) by \\(\\gamma\\left[\\binom{|R|}{2} - \\binom{|R|-1}{2}\\right] = \\gamma(|R|-1)\\). Joining \\(C\\) adds \\(w(v,C)\\) and raises the penalty on \\(C\\) by \\(\\gamma|C|\\). Combining the two changes gives\n\\[\\Delta Q = \\underbrace{w(v,C) - \\gamma|C|}_{\\text{joining } C} \\, + \\, \\underbrace{\\big[-w(v,R\\setminus\\{v\\}) + \\gamma(|R|-1)\\big]}_{\\text{leaving } R},\\]\nwhich rearranges to\n\\[\\boxed{\n\\Delta Q = w(v,C) - w(v,R\\setminus\\{v\\}) - \\gamma\\big[\\,|C| - (|R|-1)\\,\\big].\n}\\]\nLocal moving computes \\(\\Delta Q\\) for every candidate community a node’s neighbours belong to, and moves the node to whichever candidate gives the largest positive \\(\\Delta Q\\), or leaves it in place if no move improves the score. The formula for leaving \\(R\\) to become an isolated singleton is the special case \\(C = \\varnothing\\), so \\(w(v,C) = 0\\) and \\(|C| = 0\\):\n\\[\\Delta Q_{\\text{leave alone}} = -w(v,R\\setminus\\{v\\}) + \\gamma(|R|-1).\\]",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-7-the-coarse-partition-is-a-local-optimum",
+    "href": "mathematics.html#step-7-the-coarse-partition-is-a-local-optimum",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.8 Step 7: the coarse partition is a local optimum",
+    "text": "3.8 Step 7: the coarse partition is a local optimum\nApply the leaving formula to \\(A\\). Removing \\(A\\) from \\(\\{A,B,C,D,E,F\\}\\) leaves \\(\\{B,C,D,E,F\\}\\), a community of size \\(5\\).\n\\[\\Delta Q_A = -w(A, \\{B,C,D,E,F\\}) + \\gamma(6-1) = -(1+1) + (0.24)(5) = -2 + 1.2 = -0.8.\\]\n\\(A\\) has two edges of weight \\(1\\), so \\(w(A,\\text{rest}) = 2\\). The move lowers quality by \\(0.8\\) and is rejected. By symmetry, the same calculation gives \\(\\Delta Q = -0.8\\) for \\(B\\), \\(E\\), and \\(F\\).\n\n\n\n\n\n\n\nFigure 3.4: Removing A from the coarse community lowers the objective from 2.6 to 1.8.\n\n\n\n\nNow consider the boundary nodes \\(C\\) and \\(D\\), which touch the weak bridge.\n\\[\\Delta Q_C = -w(C,\\{A,B,D,E,F\\}) + \\gamma(5) = -(1+1+0.2) + 1.2 = -2.2+1.2 = -1.0.\\]\n\\(C\\) has edges to \\(A\\), \\(B\\), and \\(D\\), giving \\(1+1+0.2=2.2\\). Leaving lowers quality by \\(1.0\\), compared with \\(0.8\\) for \\(A\\). Both nodes receive the same reduction in the size penalty, but \\(C\\) would give up more internal edge weight. By symmetry, \\(\\Delta Q_D = -1.0\\).\nAll six single node departures lower quality. The partition is therefore a local optimum with respect to individual node moves. It need not be the best partition overall.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-8-a-better-partition-exists",
+    "href": "mathematics.html#step-8-a-better-partition-exists",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.9 Step 8: a better partition exists",
+    "text": "3.9 Step 8: a better partition exists\nCompare the coarse partition against \\(\\{A,B,C\\}, \\{D,E,F\\}\\). Each triangle has internal edge weight \\(e_C = 1+1+1=3\\) and size \\(n_C=3\\), giving \\(\\binom{3}{2}=3\\) pairs.\n\\[Q_{ABC} = 3 - (0.24)(3) = 3 - 0.72 = 2.28, \\qquad Q_{DEF} = 2.28 \\text{ by symmetry.}\\]\n\\[Q_{\\mathrm{refined}} = Q_{ABC} + Q_{DEF} = 2.28 + 2.28 = 4.56.\\]\n\n\n\n\n\n\n\nFigure 3.5: The partition {ABC},{DEF} scores 4.56 compared with 2.6 for the coarse partition.\n\n\n\n\nSince \\(4.56 &gt; 2.6\\), the partition into two triangles scores higher than the coarse partition. Step 7 showed why local moving cannot reach it from the chosen starting point. The improvement requires several nodes to change together.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-9-refinement",
+    "href": "mathematics.html#step-9-refinement",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.10 Step 9: refinement",
+    "text": "3.10 Step 9: refinement\nRefinement works inside each community found by local moving. It restarts from singleton pieces and restricts every move to the same coarse parent community. Nodes that remain singletons are visited in a random order. A singleton can join a refined piece when the connection requirements are met and the move does not reduce quality. Step 11 describes how Leiden chooses among acceptable moves.\nFor two separate pieces \\(R\\) and \\(S\\), let \\(E(R,S)\\) be the total edge weight between them, with each edge counted once. Before merging, the pieces contribute \\(e_R - \\gamma\\binom{|R|}{2}\\) and \\(e_S - \\gamma\\binom{|S|}{2}\\). Their connecting edges are external and do not contribute. After merging, the internal edge weight is \\(e_R + e_S + E(R,S)\\) and the size penalty is \\(\\gamma\\binom{|R|+|S|}{2}\\).\nThe change in objective is\n\\[\\Delta Q(R,S) = E(R,S) - \\gamma\\left[\\binom{|R|+|S|}{2} - \\binom{|R|}{2} - \\binom{|S|}{2}\\right].\\]\nThe bracketed term counts pairs newly grouped by the merge. Pairs within \\(R\\) and within \\(S\\) are already included in the first two binomial terms. The remaining \\(|R||S|\\) pairs have one node in each piece. The CPM merge gain for unit node sizes is therefore\n\\[\\boxed{\n\\Delta Q(R,S) = E(R,S) - \\gamma\\,|R||S|.\n}\\]\nBefore a merge, \\(E(R,S)\\) connects separate pieces. After the merge, it becomes internal edge weight. The score increases when \\(E(R,S) &gt; \\gamma|R||S|\\) and remains unchanged at equality.\n\n\n\n\n\n\n\nFigure 3.6: Refinement begins from six singletons. A joins B, C joins AB, and corresponding moves form DEF.\n\n\n\n\nApply the formula after restarting from \\(A|B|C|D|E|F\\). For the singleton pieces \\(A\\) and \\(B\\), \\(E(A,B)=1\\).\n\\[\\Delta Q(A,B) = 1 - (0.24)(1)(1) = 0.76.\\]\nThe positive gain allows \\(A\\) and \\(B\\) to form the piece \\(\\{A,B\\}\\). Node \\(C\\) connects to both members of this piece with weight \\(1\\), so \\(E(\\{A,B\\},C) = 1+1=2\\).\n\\[\\Delta Q(\\{A,B\\}, C) = 2 - (0.24)(2)(1) = 2 - 0.48 = 1.52.\\]\nThe gain is also positive, giving \\(\\{A,B,C\\}\\). The corresponding moves on \\(D\\), \\(E\\), and \\(F\\) produce \\(\\{D,E,F\\}\\).\nFor comparison, consider joining \\(C\\) and \\(D\\) while both are singletons. Their connecting edge has weight \\(E(C,D)=0.2\\).\n\\[\\Delta Q(C,D) = 0.2 - (0.24)(1)(1) = 0.2 - 0.24 = -0.04.\\]\nThe negative gain rejects this move. The sequence gives the refined partition\n\\[P_{\\mathrm{refined}} = \\{ABC, DEF\\}.\\]",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-10-the-well-connectedness-condition",
+    "href": "mathematics.html#step-10-the-well-connectedness-condition",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.11 Step 10: the well-connectedness condition",
+    "text": "3.11 Step 10: the well-connectedness condition\nRefinement is not free to merge any two pieces with positive gain without further checks. If it were, a long chain of individually small positive gains could gradually reconnect two pieces that should remain separate, in a way that later proves hard to justify. Leiden’s refinement step therefore also asks whether a piece is sufficiently well connected to the rest of its parent community before allowing it to merge.\nFor a subset \\(S\\) sitting inside a parent community \\(C\\), the relevant condition, translated into the CPM merge-gain language of Step 9, is\n\\[\nE\\big(S,\\ C\\setminus S\\big) \\;\\ge\\; \\gamma\\,|S|\\,|C\\setminus S|.\n\\]\nThis is precisely the statement that merging \\(S\\) back into the rest of \\(C\\), using the formula from Step 9 with \\(R = C\\setminus S\\), would not lose quality: it is the non-negative version of \\(\\Delta Q(S, C\\setminus S) \\geq 0\\). In words, the condition asks whether \\(S\\)’s connection to the remainder of its parent community is at least as strong as the resolution \\(\\gamma\\) demands, given how many node pairs that connection has to justify.\nCheck this for our refined pieces. Take \\(S=\\{A,B,C\\}\\) as a candidate subset of the whole coarse community \\(C_{\\text{parent}} = \\{A,\\dots,F\\}\\), so \\(C_{\\text{parent}}\\setminus S = \\{D,E,F\\}\\). The connection between them is just the bridge, \\(E(S, C_{\\text{parent}}\\setminus S) = 0.2\\), and \\(|S|\\,|C_{\\text{parent}}\\setminus S| = 3\\times3=9\\), so the condition requires \\(0.2 \\ge 0.24\\times 9 = 2.16\\), which is false. \\(\\{A,B,C\\}\\) is not well connected enough, at this resolution, to be considered a candidate for merging back with \\(\\{D,E,F\\}\\), consistent with the negative merge gain already found for \\(C\\) and \\(D\\) in Step 9.\nBe precise about what this guarantees. The original paper proves that, after one full pass of local moving and refinement, every resulting community is internally connected as a graph. The stronger property, that every subset of every community is individually optimally placed in this well-connectedness sense, is an asymptotic guarantee: it holds in the limit of repeated iterations of the whole procedure, not necessarily after a single pass. The practical concepts section near the end of this chapter returns to this distinction.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-11-randomness-in-refinement",
+    "href": "mathematics.html#step-11-randomness-in-refinement",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.12 Step 11: randomness in refinement",
+    "text": "3.12 Step 11: randomness in refinement\nLocal moving takes the candidate with the largest positive gain. Refinement instead chooses at random among candidates that pass the connection condition and have nonnegative gain. Candidates with larger gains receive more weight, but they are not chosen deterministically.\nFollowing the notation of the original paper, a candidate community \\(C\\) is chosen with probability proportional to\n\\[\\Pr(C) \\propto \\exp\\!\\left(\\frac{1}{\\theta}\\,\\Delta H(v \\to C)\\right),\\]\nwhere \\(\\Delta H(v\\to C)\\) is the quality gain of the candidate move and \\(\\theta&gt;0\\) controls how much randomness is injected. A small \\(\\theta\\) makes this distribution sharply peaked on the best candidate, close to ordinary greedy selection. A large \\(\\theta\\) spreads the probability more evenly across all acceptable candidates, allowing moves that are not strictly the best.\n\n\n\n\n\n\nNoteThe parameter name in software\n\n\n\nThe paper calls the randomness parameter \\(\\theta\\). R and Python igraph call it beta and default to 0.01. Smaller values concentrate probability on the largest gains. Larger values spread probability across more acceptable candidates. The default is usually left unchanged.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-12-aggregation",
+    "href": "mathematics.html#step-12-aggregation",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.13 Step 12: aggregation",
+    "text": "3.13 Step 12: aggregation\nRefinement produced two pieces, \\(X = \\{A,B,C\\}\\) and \\(Y = \\{D,E,F\\}\\). Aggregation turns each refined piece into a single node of a new, smaller graph. The edge weight between the two new aggregate nodes is defined as the total edge weight running between the two original groups.\n\\[w_{XY} = \\sum_{i \\in X} \\sum_{j \\in Y} w_{ij}.\\]\nOnly one edge crosses between \\(X\\) and \\(Y\\) in the original graph, the bridge between \\(C\\) and \\(D\\), of weight \\(0.2\\). Every other cross term in the double sum is zero, so\n\\[w_{XY} = 0.2.\\]\nEdges with both endpoints inside the same refined piece, such as the edge between \\(A\\) and \\(B\\), become internal connections of the aggregate node. The matrix form below shows how they are retained.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-13-aggregation-as-a-matrix-product",
+    "href": "mathematics.html#step-13-aggregation-as-a-matrix-product",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.14 Step 13: aggregation as a matrix product",
+    "text": "3.14 Step 13: aggregation as a matrix product\nDefine a membership matrix \\(H\\), with one row per original node and one column per refined piece. \\(H_{iX}=1\\) if original node \\(i\\) belongs to piece \\(X\\), and \\(0\\) otherwise.\n\n\n\n\n\n\n\nFigure 3.7: The membership matrix H: rows A through F, columns X and Y.\n\n\n\n\n\\[H =\n\\begin{pmatrix}\n1&0\\\\ 1&0\\\\ 1&0\\\\ 0&1\\\\ 0&1\\\\ 0&1\n\\end{pmatrix}.\\]\nThe aggregated adjacency matrix is obtained by the matrix product\n\\[\\boxed{\nA_{\\mathrm{new}} = H^{\\!\\top} A H.\n}\\]\n\\(H^\\top\\) is the transpose of \\(H\\), a \\(2\\times 6\\) matrix. Multiplication by \\(H\\) on the right sums the edge weights from each original node to each refined piece. Multiplication by \\(H^\\top\\) on the left then sums over the original nodes in each piece. The result is a \\(2\\times2\\) matrix with one row and one column per refined piece.\nApplying the multiplication to the adjacency matrix from Step 1 gives\n\\[A_{\\mathrm{new}} = H^{\\!\\top} A H =\n\\begin{pmatrix}\n6 & 0.2\\\\\n0.2 & 6\n\\end{pmatrix}.\\]\nThe off diagonal entry \\(0.2\\) agrees with \\(w_{XY}\\) from Step 12.\nThe \\((X,X)\\) entry is \\(6\\), while the internal edge weight of \\(X = \\{A,B,C\\}\\) is \\(e_X = 3\\) when each edge is counted once. The product \\(H^\\top A H\\) sums over ordered pairs, so every internal edge contributes twice. Thus \\(6 = 2\\times 3\\).\n\n\n\n\n\n\nImportantTwo counting conventions\n\n\n\n\\(e_C\\) counts each undirected edge once. The diagonal of \\(A_{\\mathrm{new}} = H^\\top A H\\) counts each internal edge twice because it sums over ordered pairs. Check the convention before comparing these quantities.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-14-aggregate-node-size",
+    "href": "mathematics.html#step-14-aggregate-node-size",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.15 Step 14: aggregate node size",
+    "text": "3.15 Step 14: aggregate node size\n\\(X\\) is not an ordinary node of size one. It represents three original observations, so its node size is \\(n_X = 3\\), and likewise \\(n_Y = 3\\). In general, if node \\(i\\) of the original graph has size \\(n_i\\) (equal to \\(1\\) for every original node here), the size of an aggregate node \\(X\\) is the sum of the sizes of the pieces it absorbs,\n\\[n_X = \\sum_{i \\in X} n_i.\\]\nAggregate node size replaces the ordinary node count when the objective is evaluated on the new graph. For two aggregate nodes, the CPM penalty is \\(\\gamma\\,n_X n_Y\\). For modularity, the corresponding quantity is the aggregate degree \\(K_X = \\sum_{i\\in X} k_i\\).",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-15-why-aggregation-preserves-the-objective",
+    "href": "mathematics.html#step-15-why-aggregation-preserves-the-objective",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.16 Step 15: why aggregation preserves the objective",
+    "text": "3.16 Step 15: why aggregation preserves the objective\nAggregation preserves the objective for partitions that respect the refined pieces. Aggregate sizes and degrees retain the information needed for the calculation.\nFor modularity, define the aggregate cross weight and aggregate degree sum as\n\\[A'_{RS} = \\sum_{i \\in R}\\sum_{j \\in S} A_{ij}, \\qquad K_R = \\sum_{i \\in R} k_i.\\]\nThen, because both sums distribute over the same index sets,\n\\[A'_{RS} - \\gamma\\frac{K_R K_S}{2m} = \\sum_{i \\in R}\\sum_{j \\in S}\\left(A_{ij} - \\gamma\\frac{k_ik_j}{2m}\\right).\\]\nThe left side is the modularity comparison for aggregate nodes \\(R\\) and \\(S\\). The right side sums the same comparison over the original node pairs. Distributing the double sum gives the equality. For CPM, the aggregate penalty \\(\\gamma\\,n_R n_S\\) equals the sum of the unit penalties for the \\(n_Rn_S\\) original pairs.\nThe aggregate graph is a compressed representation of the same optimization problem for partitions that keep each refined piece intact.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-16-a-subtlety-about-aggregate-community-labels",
+    "href": "mathematics.html#step-16-a-subtlety-about-aggregate-community-labels",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.17 Step 16: a subtlety about aggregate community labels",
+    "text": "3.17 Step 16: a subtlety about aggregate community labels\nThis point is easy to state and easy to misread, so it deserves its own step.\nThe aggregate graph’s nodes are defined by the refined partition, \\(P_{\\mathrm{refined}} = \\{X, Y\\}\\) with \\(X=\\{A,B,C\\}\\) and \\(Y=\\{D,E,F\\}\\). But the initial community assignment on this new, smaller graph is not taken from the refined partition. It is taken from the original coarse partition, \\(P = \\{\\{A,B,C,D,E,F\\}\\}\\), the one local moving actually produced.\nBecause \\(P\\) contained all six original nodes in a single community, both \\(X\\) and \\(Y\\) start out labelled as belonging to that same community on the aggregate graph, even though they are two distinct nodes of that graph.\n\\[\nX \\neq Y \\quad \\text{as graph nodes,} \\qquad c_X = c_Y \\quad \\text{as their starting community label.}\n\\]\nRefinement did not simply split the coarse community into its final answer. It created two separately movable units, \\(X\\) and \\(Y\\), while temporarily preserving the coarser grouping as their shared starting point for the next round of local moving. Whether that shared starting point survives depends on what local moving does next.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-17-escaping-the-local-optimum",
+    "href": "mathematics.html#step-17-escaping-the-local-optimum",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.18 Step 17: escaping the local optimum",
+    "text": "3.18 Step 17: escaping the local optimum\nAt the original level, Step 7 showed that no individual node, \\(A\\) through \\(F\\), wanted to leave the coarse community on its own. Now run local moving again, on the aggregate graph, where \\(X\\) and \\(Y\\) are single nodes that happen to share a starting community label.\nLocal moving can now separate \\(X\\) from \\(Y\\) in one move. Before the move, both aggregate nodes share one community and the objective is \\(Q_{\\mathrm{coarse}} = 2.6\\). After the move, they form separate communities and the objective is \\(Q_{\\mathrm{refined}} = 4.56\\).\n\\[\\Delta Q = Q_{\\mathrm{refined}} - Q_{\\mathrm{coarse}} = 4.56 - 2.6 = 1.96.\\]\nAt the original level, local moving could move only one node at a time. On the aggregate graph, it can move a refined piece in one step.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-18-repeating-across-levels",
+    "href": "mathematics.html#step-18-repeating-across-levels",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.19 Step 18: repeating across levels",
+    "text": "3.19 Step 18: repeating across levels\nAt level \\(0\\), each node represents one observation. At level \\(1\\), a node may represent several observations. At level \\(2\\), it may represent several groups from level \\(1\\).\nWithin one Leiden iteration, local moving, refinement, and aggregation continue across levels until every node at the current level is in its own community after local moving. Another aggregation would then leave the graph unchanged.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-19-flattening-back-to-the-original-nodes",
+    "href": "mathematics.html#step-19-flattening-back-to-the-original-nodes",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.20 Step 19: flattening back to the original nodes",
+    "text": "3.20 Step 19: flattening back to the original nodes\nOnce the algorithm stops, the aggregate community labels are mapped back to the original observations. If \\(X\\) receives label \\(1\\), then \\(A\\), \\(B\\), and \\(C\\) receive label \\(1\\). If \\(Y\\) receives label \\(2\\), then \\(D\\), \\(E\\), and \\(F\\) receive label \\(2\\).\n\\[\\{A,B,C\\} \\to \\text{cluster 1}, \\qquad \\{D,E,F\\} \\to \\text{cluster 2}.\\]",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-20-the-complete-picture",
+    "href": "mathematics.html#step-20-the-complete-picture",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.21 Step 20: the complete picture",
+    "text": "3.21 Step 20: the complete picture\n\n\n\n\n\n\n\nFigure 3.8: The complete Leiden procedure: local moving on the current graph until its queue is empty, refinement inside each resulting community, aggregation of the refined pieces into a smaller graph whose initial communities come from the coarse partition, repetition across levels, and a final flattening step back to the original nodes.\n\n\n\n\nFigure 3.8 summarizes the sequence. Local moving stops when its queue is empty. Refinement finds smaller connected pieces inside each community. Aggregation turns those pieces into nodes while using the coarse partition for their starting labels. Local moving then runs on the aggregate graph. The levels end when every current node has its own community, and the labels are mapped back to the original observations.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-21-pseudocode",
+    "href": "mathematics.html#step-21-pseudocode",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.22 Step 21: pseudocode",
+    "text": "3.22 Step 21: pseudocode\nOnly after working through every piece by hand is it worth writing the procedure down compactly. This pseudocode mirrors the terminology introduced above; it is not a transcription of any particular package’s source code.\nfunction LEIDEN(graph, objective, gamma, initial_partition = singletons):\n    partition = initial_partition\n    repeat:\n        partition = LOCAL_MOVING(graph, partition, objective, gamma)\n        refined = REFINEMENT(graph, partition, objective, gamma)\n        # refined is generally a finer partition than `partition`\n\n        aggregate_graph = AGGREGATE(graph, refined)\n        # nodes of aggregate_graph = pieces of `refined`\n        # initial community labels on aggregate_graph copied from `partition`,\n        # i.e. two aggregate nodes share a label iff their pieces were in the\n        # same community of `partition`\n\n        if no further improvement is possible:\n            break\n        graph = aggregate_graph\n        partition = initial community labels on aggregate_graph\n\n    return FLATTEN(partition down to original nodes)",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#cpm-versus-modularity",
+    "href": "mathematics.html#cpm-versus-modularity",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.1 CPM versus modularity",
+    "text": "4.1 CPM versus modularity\nBoth objectives compare internal connections with a baseline. Modularity uses node degree and the total graph weight \\(2m\\). The dependence creates the resolution limit described in Step 3. CPM uses the constant \\(\\gamma\\), so its baseline does not depend on graph size. CPM is useful when the same graph is examined at several resolutions.\nNeither objective is always preferable. Direct calls to R igraph::cluster_leiden() and Python igraph.Graph.community_leiden() default to CPM. Scanpy sc.tl.leiden() and Seurat FindClusters(algorithm = 4) default to a modularity objective.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#resolution-revisited",
+    "href": "mathematics.html#resolution-revisited",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.2 Resolution, revisited",
+    "text": "4.2 Resolution, revisited\nReturn to CPM’s merge condition from Step 9: two pieces \\(R\\) and \\(S\\) are worth merging exactly when\n\\[\nE(R,S) &gt; \\gamma\\,|R||S|.\n\\]\nRead left to right, this says that the evidence connecting \\(R\\) and \\(S\\) must exceed \\(\\gamma\\) times the number of new pairs the merge would create. Raising \\(\\gamma\\) raises the bar on the right-hand side, so a stronger connection is required before two groups are considered part of the same community. On our worked example, \\(\\gamma=0.24\\) was deliberately chosen so that the bridge, \\(E(C,D)=0.2\\), falls just short of what a single pair would require, \\(\\gamma \\times 1 \\times 1 = 0.24\\), keeping the two triangles separate. A smaller \\(\\gamma\\), say \\(0.15\\), would have accepted that same bridge and merged the triangles back into one community, since \\(0.2 &gt; 0.15\\).\nThis is the same behaviour shown numerically in Chapter 1’s Figure 1.12, where lowering the resolution merged the four visually distinct groups into two, and raising it split them into eight.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#number-of-neighbours-versus-resolution",
+    "href": "mathematics.html#number-of-neighbours-versus-resolution",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.3 Number of neighbours versus resolution",
+    "text": "4.3 Number of neighbours versus resolution\nThe number of neighbours changes which edges exist before Leiden runs. The resolution changes how Leiden partitions that graph. A larger neighbour count usually produces a denser graph. A larger resolution requires stronger connections for nodes to remain grouped. The settings act at different stages of the workflow.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#number-of-iterations",
+    "href": "mathematics.html#number-of-iterations",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.4 Number of iterations",
+    "text": "4.4 Number of iterations\nOne iteration runs local moving, refinement, and aggregation across levels, then maps the result back to the original nodes. Another iteration uses that result as its starting partition. The objective cannot decrease between iterations, although later iterations may leave the partition unchanged.\nSeveral implementations use a negative iteration count to mean that iteration continues until a pass gives no improvement.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#initial-membership",
+    "href": "mathematics.html#initial-membership",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.5 Initial membership",
+    "text": "4.5 Initial membership\nLeiden can begin from a supplied partition rather than from singletons. It can continue from an earlier Leiden result or from a partition produced by another method.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#edge-weights",
+    "href": "mathematics.html#edge-weights",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.6 Edge weights",
+    "text": "4.6 Edge weights\nThe quantities \\(A_{ij}\\), \\(E(R,S)\\), \\(e_C\\), and \\(w(v,C)\\) all allow weighted edges. A larger edge weight contributes more to internal quality and to merge gains. The choice between a weighted and unweighted graph is made during graph construction.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#connectivity-guarantees",
+    "href": "mathematics.html#connectivity-guarantees",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.7 Connectivity guarantees",
+    "text": "4.7 Connectivity guarantees\nAfter each Leiden iteration, every community is \\(\\gamma\\) connected, which is stronger than ordinary graph connectivity. Louvain does not provide this guarantee.\nWhen an iteration leaves the partition unchanged, every node is locally optimal and every community is subpartition \\(\\gamma\\) dense. With continued iteration to asymptotic stability, communities become uniformly \\(\\gamma\\) dense and the partition becomes subset optimal. Uniform density means that every split of a community leaves its two parts sufficiently connected. Subset optimality means that no subset can move to another community and improve the objective.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#computational-complexity-and-scalability",
+    "href": "mathematics.html#computational-complexity-and-scalability",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.8 Computational complexity and scalability",
+    "text": "4.8 Computational complexity and scalability\nLeiden does not, in general, need to examine every pair of nodes in the graph. The graphs it is normally applied to, including nearest-neighbour graphs built from single-cell data, are sparse: each node is connected only to a limited number of neighbours, rather than to every other node. Local moving only needs to check, for each node, the communities of its actual neighbours, not every community in the graph, and aggregation shrinks the graph at each level, so later levels operate on progressively smaller structures. This is the practical reason graph-based clustering scales to datasets with many thousands, or even millions, of observations, where computing and storing every pairwise distance directly would be impractical.\nThe next chapter puts all of this into practice on a real single-cell dataset, moving from raw counts through PCA, a neighbour graph, Leiden clustering, and a look at how the choices made along the way affect the final result.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html",
+    "href": "exercises.html",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "",
+    "text": "4.1 The dataset\nThese exercises use PBMC3k, a collection of 2,700 peripheral blood mononuclear cells from a healthy donor, produced with the 10x Genomics platform. The dataset is widely used in introductory single cell clustering tutorials.\nUnlike Chapter 2’s simulated data, there is no known true label for each cell. What counts as the right number of clusters, or the right resolution, is not something this chapter can simply tell you. The exercises walk through a complete, small analysis, from raw counts to a Leiden clustering, and ask you to defend the choices made along the way rather than to reproduce one fixed answer.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#the-dataset",
+    "href": "exercises.html#the-dataset",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "",
+    "text": "NoteDownload the exercise data\n\n\n\n\nRaw count matrix, features\nRaw count matrix, barcodes\nRaw count matrix, values\n\nKeep the three files together inside a folder named pbmc3k_raw, itself inside a folder named data. Seurat::Read10X() and scanpy.read_10x_mtx() each read this three file layout directly.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#exercise-1.-load-the-data-and-run-basic-quality-control",
+    "href": "exercises.html#exercise-1.-load-the-data-and-run-basic-quality-control",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.2 Exercise 1. Load the data and run basic quality control",
+    "text": "4.2 Exercise 1. Load the data and run basic quality control\nTask. Load the raw count matrix. Report its shape. Compute, for every cell, the number of detected genes, the total UMI count, and the percentage of counts coming from mitochondrial genes, identified by a MT- prefix. Filter out cells with fewer than 200 detected genes, more than 2,500 detected genes, or more than 5 percent mitochondrial content. Also remove genes detected in fewer than 3 cells. Report the shape after filtering.\n\n\n\n\n\n\nTipTip\n\n\n\nAn unusually high mitochondrial percentage is a standard sign of a damaged or dying cell, and an unusually high gene count can indicate two cells captured in one droplet. Neither cutoff is a law of nature; different tissues and protocols call for different thresholds. These values follow the dataset’s own well-established tutorial convention, so that your result can be checked against a widely used reference analysis.\n\n\n\n\n\n\n\n\nNoteSolution\n\n\n\n\n\n\nRPython\n\n\nlibrary(Seurat)\n\ncounts &lt;- Read10X(data.dir = \"data/pbmc3k_raw\")\ndim(counts)\n\npbmc &lt;- CreateSeuratObject(counts = counts, project = \"pbmc3k\",\n                            min.cells = 3, min.features = 200)\n\npbmc[[\"percent.mt\"]] &lt;- PercentageFeatureSet(pbmc, pattern = \"^MT-\")\nsummary(pbmc$percent.mt)\n\npbmc &lt;- subset(pbmc, subset = nFeature_RNA &lt; 2500 & percent.mt &lt; 5)\ndim(pbmc)\n[1] 32738  2700\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.\n  0.000   1.537   2.031   2.217   2.643  22.569\n[1] 13714  2638\n\n\nimport scanpy as sc\n\nadata = sc.read_10x_mtx(\"data/pbmc3k_raw\", var_names=\"gene_symbols\")\nadata.var_names_make_unique()\nprint(adata.shape)\n\nsc.pp.filter_cells(adata, min_genes=200)\nsc.pp.filter_genes(adata, min_cells=3)\n\nadata.var[\"mt\"] = adata.var_names.str.startswith(\"MT-\")\nsc.pp.calculate_qc_metrics(adata, qc_vars=[\"mt\"], percent_top=None,\n                            log1p=False, inplace=True)\n\nadata = adata[adata.obs.pct_counts_mt &lt; 5, :].copy()\nadata = adata[adata.obs.n_genes_by_counts &lt; 2500, :].copy()\nprint(adata.shape)\n(2700, 32738)\n(2638, 13714)\n\n\n\nThe raw matrix contains 2,700 cells and 32,738 genes. After filtering, 2,638 cells and 13,714 genes remain. The removed cells failed at least one quality threshold, while the removed genes were detected in fewer than three cells. Read the dimension order carefully. dim() reports genes before cells, while .shape reports cells before genes.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#exercise-2.-normalize-select-variable-genes-and-run-pca",
+    "href": "exercises.html#exercise-2.-normalize-select-variable-genes-and-run-pca",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.3 Exercise 2. Normalize, select variable genes, and run PCA",
+    "text": "4.3 Exercise 2. Normalize, select variable genes, and run PCA\nTask. Normalize each cell’s counts to a common total, log-transform, and select a set of highly variable genes. Scale the data and run PCA on the variable genes. Plot the fraction of variance explained by the first 30 components and decide how many components to carry forward.\n\n\n\n\n\n\nTipTip\n\n\n\nThere is no universally correct number of principal components. Look for where the curve of variance explained flattens out, and prefer a number that comfortably includes the informative components without deliberately chasing noise in the tail. Ten is used for the rest of this chapter, but nearby choices, such as eight or fifteen, would be defensible too.\n\n\n\n\n\n\n\n\nNoteSolution\n\n\n\n\n\n\nRPython\n\n\npbmc &lt;- NormalizeData(pbmc, normalization.method = \"LogNormalize\", scale.factor = 10000)\npbmc &lt;- FindVariableFeatures(pbmc, selection.method = \"vst\", nfeatures = 2000)\nlength(VariableFeatures(pbmc))\n\npbmc &lt;- ScaleData(pbmc)\npbmc &lt;- RunPCA(pbmc, features = VariableFeatures(pbmc), npcs = 15)\nround((Stdev(pbmc, reduction = \"pca\")[1:10])^2 /\n      sum(pbmc@reductions$pca@stdev^2), 4)\n[1] 2000\n [1] 0.3432 0.1376 0.1020 0.0957 0.0685 0.0441 0.0291 0.0258 0.0232 0.0229\n\n\nadata.layers[\"counts\"] = adata.X.copy()\nsc.pp.normalize_total(adata, target_sum=1e4)\nsc.pp.log1p(adata)\n\nsc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)\nadata.var[\"highly_variable\"].sum()\n\nadata.raw = adata\nadata = adata[:, adata.var.highly_variable].copy()\nsc.pp.scale(adata, max_value=10)\nsc.tl.pca(adata, svd_solver=\"arpack\", random_state=0)\nadata.uns[\"pca\"][\"variance_ratio\"][:10].round(4)\n1838\narray([0.022 , 0.0118, 0.0098, 0.0082, 0.005 , 0.0028, 0.0024, 0.0021,\n       0.002 , 0.0019])\n\n\n\n\n\n\n\n\n\n\nFigure 4.1: Fraction of variance explained by each of the first 30 principal components.\n\n\n\n\nFigure 4.1 drops most sharply over the first four or five components and changes much more slowly after about component ten. Carrying ten components forward retains the clear structure near the start of the curve without extending far into its flat tail. The choice is approximate, so a useful follow up would repeat the graph construction with nearby cutoffs and check whether the main conclusions persist.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#exercise-3.-build-the-neighbour-graph-and-run-leiden",
+    "href": "exercises.html#exercise-3.-build-the-neighbour-graph-and-run-leiden",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.4 Exercise 3. Build the neighbour graph and run Leiden",
+    "text": "4.4 Exercise 3. Build the neighbour graph and run Leiden\nTask. Using the first 10 principal components, build a neighbour graph with 10 neighbours per cell and run Leiden at resolution 1.0. Report the number of clusters found and the size of each cluster.\n\n\n\n\n\n\nTipTip\n\n\n\nAnswer this before running any code: what object does Leiden actually receive here? It is not the raw count matrix, and it is not a UMAP coordinate. Confirm your answer once you have written the code.\n\n\n\n\n\n\n\n\nNoteSolution\n\n\n\n\n\n\nRPython\n\n\npbmc &lt;- FindNeighbors(pbmc, dims = 1:10, k.param = 10)\npbmc &lt;- FindClusters(pbmc, algorithm = 4, resolution = 1.0,\n                      cluster.name = \"leiden_1.0\")\nlength(unique(pbmc$leiden_1.0))\ntable(pbmc$leiden_1.0)\n[1] 14\n\n  1   2   3   4   5   6   7   8   9  10  11  12  13  14\n368 344 331 264 253 225 192 163 155 147 117  33  32  14\n\n\nsc.pp.neighbors(adata, n_neighbors=10, n_pcs=10, random_state=0)\nsc.tl.leiden(adata, resolution=1.0, key_added=\"leiden_1.0\", random_state=0,\n             flavor=\"igraph\", n_iterations=2, directed=False)\nadata.obs[\"leiden_1.0\"].nunique()\nadata.obs[\"leiden_1.0\"].value_counts()\n14\nleiden_1.0\n1     360\n3     344\n0     289\n10    248\n8     246\n4     197\n9     197\n7     157\n2     151\n5     141\n6     141\n11    116\n12     38\n13     13\nName: count, dtype: int64\n\n\n\nThis setting produces 14 clusters. The largest contain several hundred cells, while the smallest contain only 13 or 14. Those small clusters need marker and quality control evidence before they can be treated as distinct cell populations. Leiden received the neighbour graph built from the 10 chosen principal components, not the count matrix or the UMAP coordinates.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#exercise-4.-visualize-with-umap-and-identify-marker-genes",
+    "href": "exercises.html#exercise-4.-visualize-with-umap-and-identify-marker-genes",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.5 Exercise 4. Visualize with UMAP and identify marker genes",
+    "text": "4.5 Exercise 4. Visualize with UMAP and identify marker genes\nTask. Compute a UMAP embedding from the same neighbour graph and plot it, colored by Leiden cluster. For each cluster, find marker genes that distinguish it from the rest of the dataset, and use them to propose a cell-type label.\n\n\n\n\n\n\nTipTip\n\n\n\nPBMC3k contains roughly eight broadly recognized cell populations: CD4 T cells, CD8 T cells, B cells, NK cells, CD14+ monocytes, FCGR3A+ monocytes, dendritic cells, and megakaryocytes. You are not expected to end up with exactly eight clusters. Compare the number of clusters you found to this number, and keep that comparison in mind for the next exercise.\n\n\n\n\n\n\n\n\nNoteSolution\n\n\n\n\n\n\nRPython\n\n\npbmc &lt;- RunUMAP(pbmc, dims = 1:10)\nIdents(pbmc) &lt;- pbmc$leiden_1.0\nmarkers &lt;- FindAllMarkers(pbmc, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5)\ntop &lt;- markers[order(markers$cluster, -markers$avg_log2FC), ]\nfor (cl in levels(Idents(pbmc))) {\n  cat(\"cluster\", cl, \":\", paste(head(top$gene[top$cluster == cl], 5), collapse = \", \"), \"\\n\")\n}\ncluster 1 : CCR7, LEF1, MAL, GIMAP5, PRKCQ-AS1\ncluster 2 : LINC00926, VPREB3, CD79A, FCRLA, TCL1A\ncluster 3 : CD40LG, AQP3, CD2, SUSD3, OPTN\ncluster 4 : GZMK, GZMH, CD8A, CCL5, KLRG1\ncluster 5 : TMEM176B, PLBD1, CD14, LGALS2, ASGR1\ncluster 6 : S100A12, RBP7, S100A8, FOLR3, S100A9\ncluster 8 : CKB, CDKN1C, MS4A4A, HES4, BATF3\ncluster 9 : AKR1C3, SH2D1B, GZMB, GNLY, SPON2\ncluster 12: SERPINF1, FCER1A, CLIC2, ENHO, CLEC10A\ncluster 14: LY6G6F, RP11-879F14.2, CLDN5, GP9, AP001189.4\n\n\nsc.tl.umap(adata, random_state=0)\nsc.tl.rank_genes_groups(adata, \"leiden_1.0\", method=\"wilcoxon\")\nfor cl in adata.obs[\"leiden_1.0\"].cat.categories:\n    top = [adata.uns[\"rank_genes_groups\"][\"names\"][cl][i] for i in range(5)]\n    print(f\"cluster {cl}: {top}\")\ncluster 3: ['CD74', 'CD79A', 'HLA-DRA', 'CD79B', 'HLA-DPB1']\ncluster 4: ['LST1', 'COTL1', 'FCER1G', 'AIF1', 'IFITM3']\ncluster 5: ['NKG7', 'GZMB', 'PRF1', 'GNLY', 'CTSW']\ncluster 8: ['S100A9', 'S100A8', 'FTL', 'LYZ', 'TYROBP']\ncluster 9: ['LYZ', 'S100A9', 'LGALS2', 'FCN1', 'S100A8']\ncluster 12: ['HLA-DPB1', 'HLA-DQA1', 'HLA-DPA1', 'HLA-DRA', 'CST3']\ncluster 13: ['PF4', 'SDPR', 'GNG11', 'PPBP', 'NRGN']\n\n\n\n\n\n\n\n\n\n\nFigure 4.2: Left: UMAP colored by the 14 Leiden clusters found at resolution 1.0. Right: the same cells colored by a marker-based cell type guess for each cluster.\n\n\n\n\nThe marker results support several broad identities in Figure 4.2. CD79A, CD79B, and HLA-DRA support a B cell label. S100A8, S100A9, LYZ, and FCN1 support CD14 positive monocytes. NKG7, GZMB, and GNLY support an NK cell label, while GZMK and CD8A support a CD8 T cell label. PF4, PPBP, GNG11, and GP9 identify the small megakaryocyte cluster. HLA-DPB1, HLA-DQA1, and CST3 support a dendritic cell label.\nSeveral T cell clusters share markers such as CCR7 and LEF1, and some are distinguished mainly by ribosomal genes. That evidence is weaker than the marker patterns for B cells, monocytes, NK cells, or megakaryocytes. Resolution 1.0 may therefore be dividing related T cell states more finely than the marker evidence supports.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#exercise-5.-rerun-leiden-at-several-resolutions",
+    "href": "exercises.html#exercise-5.-rerun-leiden-at-several-resolutions",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.6 Exercise 5. Rerun Leiden at several resolutions",
+    "text": "4.6 Exercise 5. Rerun Leiden at several resolutions\nTask. Repeat clustering at resolutions 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, and 1.5, keeping the neighbour graph fixed. Store every result under its own name rather than overwriting the previous one. Plot the number of clusters against resolution, and look at the UMAP colored by cluster at a low, a middle, and a high resolution.\n\n\n\n\n\n\nTipTip\n\n\n\nResist the temptation to pick whichever resolution’s UMAP looks the most visually satisfying. Note instead how the broad islands in the UMAP, corresponding to clearly separated cell populations, behave differently from the more blended central region as resolution changes.\n\n\n\n\n\n\n\n\nNoteSolution\n\n\n\n\n\n\nRPython\n\n\nfor (res in c(0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5)) {\n  pbmc &lt;- FindClusters(pbmc, algorithm = 4, resolution = res,\n                        cluster.name = paste0(\"leiden_res_\", res))\n}\nsapply(c(0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5), function(r)\n  length(unique(pbmc@meta.data[[paste0(\"leiden_res_\", r)]])))\n[1]  6  9 10 11 14 14 14\n\n\nfor res in [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5]:\n    key = f\"leiden_res_{res}\"\n    sc.tl.leiden(adata, resolution=res, key_added=key, random_state=0,\n                 flavor=\"igraph\", n_iterations=2, directed=False)\n    print(res, adata.obs[key].nunique())\n0.2 7\n0.4 9\n0.6 9\n0.8 13\n1.0 14\n1.2 16\n1.5 18\n\n\n\n\n\n\n\n\n\n\nFigure 4.3: Left: number of clusters as a function of resolution. Right: UMAP colored by cluster at resolution 0.2, 1.0, and 1.5, showing the same broad islands merging at low resolution and fragmenting further at high resolution.\n\n\n\n\nThe sweep starts with about six or seven broad clusters at resolution 0.2 and produces finer partitions as resolution rises. The clearly separated B cell, monocyte, and megakaryocyte regions remain fairly stable. Most of the additional splits occur in the more continuous T and NK cell region. This is also where the marker evidence for separate identities was weakest in the previous exercise.\nThe result does not identify one correct resolution. It shows which distinctions are stable across the sweep and which appear only at finer settings. A proposed cluster should be supported by markers, adequate size, and stability across reasonable parameter choices.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#exercise-6.-change-the-neighbour-count",
+    "href": "exercises.html#exercise-6.-change-the-neighbour-count",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.7 Exercise 6. Change the neighbour count",
+    "text": "4.7 Exercise 6. Change the neighbour count\nTask. Keeping resolution fixed at 1.0, rebuild the neighbour graph with 5, 15, 30, and 50 neighbours instead of 10, and recluster each time. Compare each result to the original \\(k=10\\) clustering with the adjusted Rand index.\n\n\n\n\n\n\nNoteSolution\n\n\n\n\n\n\nRPython\n\n\nref &lt;- pbmc$leiden_1.0\nfor (k in c(5, 10, 15, 30, 50)) {\n  tmp &lt;- FindNeighbors(pbmc, dims = 1:10, k.param = k)\n  tmp &lt;- FindClusters(tmp, algorithm = 4, resolution = 1.0,\n                       cluster.name = paste0(\"leiden_k_\", k))\n  lab &lt;- tmp@meta.data[[paste0(\"leiden_k_\", k)]]\n  cat(sprintf(\"k=%3d  n_clusters=%d  ARI vs k=10=%.4f\\n\",\n              k, length(unique(lab)), mclust::adjustedRandIndex(ref, lab)))\n}\nk=  5  n_clusters=14  ARI vs k=10=0.7374\nk= 10  n_clusters=14  ARI vs k=10=1.0000\nk= 15  n_clusters=9  ARI vs k=10=0.7169\nk= 30  n_clusters=8  ARI vs k=10=0.6852\nk= 50  n_clusters=7  ARI vs k=10=0.5950\n\n\nref = adata.obs[\"leiden_1.0\"].copy()\nfor k in [5, 10, 15, 30, 50]:\n    tmp = adata.copy()\n    sc.pp.neighbors(tmp, n_neighbors=k, n_pcs=10, random_state=0)\n    key = f\"leiden_k_{k}\"\n    sc.tl.leiden(tmp, resolution=1.0, key_added=key, random_state=0,\n                 flavor=\"igraph\", n_iterations=2, directed=False)\n    ari = adjusted_rand_score(ref, tmp.obs[key])\n    print(f\"k={k:3d}  n_clusters={tmp.obs[key].nunique()}  ARI vs k=10={ari:.4f}\")\nk=  5  n_clusters=17  ARI vs k=10=0.6361\nk= 10  n_clusters=14  ARI vs k=10=1.0000\nk= 15  n_clusters=13  ARI vs k=10=0.7392\nk= 30  n_clusters=12  ARI vs k=10=0.7464\nk= 50  n_clusters=10  ARI vs k=10=0.6376\n\n\n\n\n\n\n\n\n\n\nFigure 4.4: Left: cluster count as a function of the number of neighbours used to build the graph, resolution fixed at 1.0. Right: agreement, measured by ARI, between each result and the k=10 baseline.\n\n\n\n\nChanging \\(k\\) while holding resolution fixed changes both the cluster count and the membership of the clusters. Even when two runs return the same number of clusters, an ARI below \\(1\\) shows that some cells moved. In this sweep, larger values of \\(k\\) generally produce fewer clusters because the graph becomes denser and more interconnected.\nARI is measured against the \\(k=10\\) result, so it reports sensitivity to that baseline rather than biological correctness. The gradual decline does not identify a best value of \\(k\\). It shows that the result depends on how local neighbourhoods are defined.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#exercise-7.-check-stability-across-random-seeds",
+    "href": "exercises.html#exercise-7.-check-stability-across-random-seeds",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.8 Exercise 7. Check stability across random seeds",
+    "text": "4.8 Exercise 7. Check stability across random seeds\nTask. Rerun Leiden five times at resolution 1.0 and \\(k=10\\), changing only the random seed. Report the number of clusters and the pairwise ARI against the first run.\n\n\n\n\n\n\nImportantA trap in Seurat’s random seed handling\n\n\n\nSeurat::FindClusters(algorithm = 4, ...) requires random.seed to be strictly greater than zero for the Leiden path; passing random.seed = 0 is silently reset to 1, with a warning. If your own seed sweep happens to start at 0, check for this warning, or you may accidentally compare a seed to itself.\n\n\n\n\n\n\n\n\nNoteSolution\n\n\n\n\n\n\nRPython\n\n\nseed_labels &lt;- list()\nfor (seed in 1:5) {\n  tmp &lt;- FindClusters(pbmc, algorithm = 4, resolution = 1.0, random.seed = seed,\n                       cluster.name = paste0(\"leiden_seed_\", seed))\n  seed_labels[[as.character(seed)]] &lt;- tmp@meta.data[[paste0(\"leiden_seed_\", seed)]]\n}\nsapply(seed_labels, function(x) length(unique(x)))\nsapply(seed_labels[-1], function(x)\n  round(mclust::adjustedRandIndex(seed_labels[[\"1\"]], x), 4))\n     1      2      3      4      5\n    14     13     12     12     13\n\n     2      3      4      5\n0.8948 0.8391 0.8306 0.8888\n\n\nseed_labels = []\nfor seed in range(5):\n    key = f\"leiden_seed_{seed}\"\n    sc.tl.leiden(adata, resolution=1.0, key_added=key, random_state=seed,\n                 flavor=\"igraph\", n_iterations=2, directed=False)\n    seed_labels.append(adata.obs[key])\n[lab.nunique() for lab in seed_labels]\n[round(adjusted_rand_score(seed_labels[0], lab), 4) for lab in seed_labels[1:]]\n[14, 14, 14, 15, 14]\n[0.7174, 0.6943, 0.7233, 0.7223]\n\n\n\nThe repeated runs produce between 12 and 15 clusters, with ARI values against the first run ranging from about \\(0.69\\) to \\(0.89\\). The broad structure is similar, but some cells and some fine divisions change with the seed. A stable cluster count would not guarantee identical membership, which is why ARI is useful here.\nThis variation is expected from Leiden’s randomized refinement. It is not by itself evidence of an incorrect graph or resolution. It does mean that small clusters and fine boundaries should be treated cautiously, especially when their marker evidence is weak.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#answering-the-conceptual-questions",
+    "href": "exercises.html#answering-the-conceptual-questions",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.9 Answering the conceptual questions",
+    "text": "4.9 Answering the conceptual questions\nWork through these without rerunning any code; they are meant to be answered from what you have already produced above.\nWhat mathematical object did Leiden actually receive? A neighbour graph built from 10 principal components, specifically its weighted adjacency structure. It never received the raw gene expression matrix, and UMAP had not even been computed at the point Leiden ran in Exercise 3.\nDid Leiden operate on the expression matrix directly, or on UMAP? Neither. It operated on the neighbour graph, itself derived from PCA coordinates, which were in turn derived from a normalized and scaled subset of the expression matrix. UMAP, computed afterward in Exercise 4, is a two-dimensional summary used only for display.\nWhat changed when the number of neighbours changed, holding resolution fixed? The graph itself changed: the edge count, and which cells counted as connected to which. Exercise 6 showed this moving the cluster count and the agreement with the baseline substantially, confirming that \\(k\\) is a property of the graph construction step, not of Leiden’s optimization.\nWhat changed when only the resolution changed? Nothing about the graph changed. Only the threshold Leiden uses to decide whether a group of cells is sufficiently well connected to remain one community changed, exactly as Chapter 3 derived algebraically for CPM’s merge condition.\nWhy can the cluster numbers differ between R and Python even when the biological grouping is similar? Cluster labels are arbitrary integers assigned in whatever order the implementation happens to produce them. Seurat and Scanpy use different normalization defaults, different variable-gene selection formulas, and different underlying Leiden bindings, so exact cluster boundaries can differ in detail even when both recover recognizably the same broad populations, as they did throughout this chapter.\nWhy might a continuous biological trajectory be poorly summarized by a large number of Leiden clusters? Leiden always returns discrete, non-overlapping groups. If the underlying biology changes gradually, such as along a maturation or activation gradient, there is no natural break point for Leiden to find, and a high resolution will simply cut the continuum into arbitrary segments. Chapter 1’s comparison with Diffusion Maps discussed this limitation directly.\nWhich clusters appear robust across reasonable parameter choices? Based on the exercises above, the B-cell, monocyte, NK, and megakaryocyte populations appear as their own separated islands in UMAP space and persist as recognizable, marker-supported clusters across the resolution and neighbour-count sweeps. The finer subdivisions within the T-cell compartment are the least stable: they appear or disappear depending on resolution, shift under different neighbour counts, and are the primary source of disagreement across random seeds in Exercise 7.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#diagnostics-and-practical-advice",
+    "href": "exercises.html#diagnostics-and-practical-advice",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.10 Diagnostics and practical advice",
+    "text": "4.10 Diagnostics and practical advice\nThe exercises above touched resolution sensitivity, neighbour-count sensitivity, the number of principal components, edge weighting, and random seeds directly. A few more points are worth keeping in mind whenever you run this workflow on new data, even though the small size of PBMC3k does not illustrate all of them clearly.\nDistance and similarity choice. Every graph in this course used Euclidean distance on PCA coordinates, the standard default in both Seurat and Scanpy. Other distances are sometimes used for other data types; whichever is chosen, \\(\\varepsilon\\)-style radius arguments elsewhere in your analysis pipeline, and the general notion of what counts as “close,” change along with it.\nBatch effects. If cells in your own data come from multiple samples, donors, or sequencing runs, technical differences between batches can dominate the neighbour graph, pulling cells together by batch of origin rather than by cell type. This course’s PBMC3k data comes from a single sample and does not illustrate this problem, but a real multi-sample analysis normally applies a batch-correction step before building the neighbour graph, not after. Leiden clusters whatever graph it is given, and it cannot distinguish a batch effect from real biological structure once both are baked into the graph.\nSmall clusters and rare populations. A biologically real but rare population, such as the 14-cell cluster found in Exercise 3, can look similar to an artifact of over-splitting a larger population. Marker-gene support, as in Exercise 4, and persistence across the resolution and neighbour-count sweeps of Exercises 5 and 6, are better evidence than cluster size alone. Neither is definitive proof on its own.\nDisconnected graphs and isolated cells. A cell with no close neighbours under the chosen distance and \\(k\\) can end up in its own small component of the graph, or fail to connect meaningfully to any community. Leiden’s connectivity guarantee from Chapter 3 ensures the communities it returns are internally connected; it does not prevent a poorly connected input graph from producing a poorly supported partition in the first place.\nRepeated runs and cluster stability. Exercise 7 showed real variation across random seeds even at fixed settings. Running Leiden more than once, at the settings you intend to use, and checking whether the broad structure persists, is a cheap way to catch a result that happens to be unusually sensitive to the specific random draw.\nMarker genes and biological validation. A cluster is a statement about graph connectivity, not automatically a statement about cell identity. Connecting a cluster to a known biological label always requires independent evidence, ordinarily marker gene expression, exactly as Exercise 4 did.\nNone of this points to one universally correct resolution, one correct value of \\(k\\), or one correct number of principal components. It also does not mean the highest modularity or CPM score automatically identifies the biologically correct clustering, or that a silhouette score can be used as a universal stopping rule for a method that does not operate in a continuous coordinate space to begin with. A Leiden clustering is best interpreted together with the scientific question being asked, the marker evidence for each cluster, the stability of the result under reasonable parameter changes, and, where available, independent knowledge of the biology.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "exercises.html#what-this-chapter-did-not-do",
+    "href": "exercises.html#what-this-chapter-did-not-do",
+    "title": "4  Leiden exercises with PBMC3k",
+    "section": "4.11 What this chapter did not do",
+    "text": "4.11 What this chapter did not do\nThis chapter did not search for a single correct resolution, and it did not report a silhouette score or a modularity value as a selection rule. Both would have implied a false sense of a uniquely correct answer. What Chapter 3 established mathematically, and what this chapter has now shown directly on real data, is that a Leiden clustering is conditional on every choice that produced its input graph and every setting given to the algorithm itself. Reporting a clustering without reporting those choices leaves out exactly the information needed to judge it.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Leiden exercises with PBMC3k</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#refinement",
+    "href": "intuition.html#refinement",
+    "title": "1  Leiden clustering",
+    "section": "1.12 Refinement",
+    "text": "1.12 Refinement\nLook again at the coarse community \\(ABCDEF\\) from Figure 1.9, and watch it get taken apart.\n\n\n\n\n\n\n\nFigure 1.10: Refinement examines a coarse community’s internal structure. Starting from the coarse community ABCDEF, its internal structure is inspected, ABC and DEF are identified as internally well-connected pieces, and those pieces are kept separate when the next graph is built.\n\n\n\n\nFigure 1.10 reads left to right. The first panel is the coarse community exactly as local moving left it, one single group. The second panel temporarily sets that grouping aside and looks only at the edges inside it. The third panel identifies \\(\\{A,B,C\\}\\) and \\(\\{D,E,F\\}\\) as two internally well-connected pieces, based on the strong triangle edges within each and the weak single edge between them. The fourth panel keeps those two pieces separate going forward.\nThis distinction matters and is easy to miss. Refinement does not simply mean splitting the final answer into smaller pieces at the end. It happens during the algorithm, before aggregation, and its output is used to build the next, smaller graph that the algorithm continues working on. The refined pieces are not yet the final clusters. They are the units that the next round of local moving is allowed to move as a whole.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#supernodes",
+    "href": "intuition.html#supernodes",
+    "title": "1  Leiden clustering",
+    "section": "1.13 Supernodes",
+    "text": "1.13 Supernodes\nRefinement produced two pieces, \\(X = \\{A,B,C\\}\\) and \\(Y = \\{D,E,F\\}\\). Aggregation turns each piece into a single node of a new, smaller graph.\n\n\n\n\n\n\n\nFigure 1.11: Left: the six nodes colored by their refined piece, with every edge weight shown. Right: the same structure collapsed into two supernodes, X and Y, joined by one edge whose weight summarizes the total connection between the two original groups.\n\n\n\n\nIn the right panel of Figure 1.11, \\(X\\) and \\(Y\\) are supernodes. Each stands for a group of original nodes. The edge between them, with weight \\(0.2\\), summarizes the total connection between everything inside \\(X\\) and everything inside \\(Y\\). Internal edges become self connections on the supernodes, although those loops are omitted from the drawing. The membership of each supernode is also retained, so the final result can be mapped back to the original nodes.\nThis is the central mechanical trick behind Leiden. At the original level, the local moving step can only move one cell at a time. After refinement and aggregation, a single node in the new graph can represent an entire group of cells. The very same local-moving machinery, completely unchanged, can now move that whole group in one step, simply because it is now sitting behind one node instead of three. The coordinated three-node move that local moving could never find at the original level becomes an ordinary one-node move at the aggregated level.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#setup",
+    "href": "practice.html#setup",
+    "title": "2  Leiden with R and Python",
+    "section": "",
+    "text": "ImportantDirect and package level interfaces\n\n\n\nR’s igraph::cluster_leiden() and Python’s igraph.Graph.community_leiden() call the same underlying C library. Their main arguments and defaults match, except for automatic use of edge weights. R uses an edge attribute named weight when it is present. Python requires the attribute name or values to be passed through weights.\nPython’s leidenalg.find_partition() is a separate interface. It takes a partition class and uses resolution_parameter rather than resolution. Scanpy 1.11.5 can use either leidenalg or igraph as its backend, so this chapter shows both Python interfaces.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#check-agreement-with-ari",
+    "href": "practice.html#check-agreement-with-ari",
+    "title": "2  Leiden with R and Python",
+    "section": "2.2 Check agreement with ARI",
+    "text": "2.2 Check agreement with ARI\nThe adjusted Rand index, or ARI, measures agreement between two groupings of the same observations. It compares whether pairs of observations are kept together or placed apart, then corrects for agreement expected by chance. An ARI of \\(1\\) means perfect agreement. A value near \\(0\\) means the agreement is close to chance. Group numbers do not need to match because ARI compares the grouping, not the labels assigned to it.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#load-the-data",
+    "href": "practice.html#load-the-data",
+    "title": "2  Leiden with R and Python",
+    "section": "2.3 Load the data",
+    "text": "2.3 Load the data\nThe dataset contains 220 points in two dimensions. Its four groups are two interleaved crescents, one small dense group, and one larger loose group. The same data appear in Chapter 1 at Figure 1.1. They were generated once with a fixed seed and saved in data/leiden_demo.csv, so R and Python use identical observations and labels.\n\n\n\n\n\n\nNotePractice files\n\n\n\nSimulated data\nSix node graph\nKeep the downloaded CSV files inside a folder named data when following the examples.\n\n\n\nRPython\n\n\ndemo &lt;- read.csv(\"data/leiden_demo.csv\")\ndim(demo)\nhead(demo, 3)\ntable(demo$true_community)\n[1] 220   4\n  id        x          y true_community\n1  1 1.986200 -0.4189657     crescent_2\n2  2 4.509723  1.5924648     dense_blob\n3  3 2.714331  0.3573930     crescent_2\n\ncrescent_1 crescent_2 dense_blob loose_blob\n        70         70         28         52\n\n\nimport numpy as np\nimport pandas as pd\n\ndemo = pd.read_csv(\"data/leiden_demo.csv\")\nprint(demo.shape)\nprint(demo.head(3))\nprint(demo[\"true_community\"].value_counts())\n(220, 4)\n   id         x         y true_community\n0   1  1.986200 -0.418966     crescent_2\n1   2  4.509723  1.592465     dense_blob\n2   3  2.714331  0.357393     crescent_2\ntrue_community\ncrescent_2    70\ncrescent_1    70\nloose_blob    52\ndense_blob    28\nName: count, dtype: int64\n\n\n\nThe true_community column is used only for evaluation. Leiden receives the x and y coordinates after they have been converted to a graph.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#build-a-neighbour-graph",
+    "href": "practice.html#build-a-neighbour-graph",
+    "title": "2  Leiden with R and Python",
+    "section": "2.4 Build a neighbour graph",
+    "text": "2.4 Build a neighbour graph\nWe construct a nearest neighbour graph with \\(k = 15\\). Both examples use package functions for the neighbour search.\n\nRPython\n\n\nlibrary(igraph)\nlibrary(bluster)\n\nX &lt;- as.matrix(demo[, c(\"x\", \"y\")])\ng &lt;- makeKNNGraph(X, k = 15)\nvcount(g)\necount(g)\nis_directed(g)\n[1] 220\n[1] 1925\n[1] FALSE\n\n\nimport igraph as ig\nfrom sklearn.neighbors import kneighbors_graph\n\nX = demo[[\"x\", \"y\"]].to_numpy()\n\ndef knn_graph(X, k):\n    adjacency = kneighbors_graph(X, n_neighbors=k, mode=\"connectivity\")\n    adjacency = adjacency.maximum(adjacency.T).astype(\"int64\")\n    return ig.Graph.Adjacency(adjacency, mode=\"undirected\")\n\ng = knn_graph(X, k=15)\nprint(g.vcount(), g.ecount(), g.is_directed())\n220 1925 False\n\n\n\nbluster::makeKNNGraph() returns an igraph graph directly. In Python, kneighbors_graph() returns a sparse adjacency matrix and igraph.Graph.Adjacency() converts it to a graph. The call to maximum() keeps an edge when either point selected the other as a neighbour. Both routes produce 220 nodes and 1925 undirected edges.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#fit-leiden",
+    "href": "practice.html#fit-leiden",
+    "title": "2  Leiden with R and Python",
+    "section": "2.5 Fit Leiden",
+    "text": "2.5 Fit Leiden\nWe use a modularity objective and resolution \\(0.15\\). The next two sections examine this choice.\n\nRPython\n\n\nset.seed(42)\npart &lt;- cluster_leiden(g, objective_function = \"modularity\",\n                        resolution = 0.15, n_iterations = 2)\nlength(unique(membership(part)))\ntable(membership(part))\n[1] 4\n\n 1  2  3  4\n70 28 52 70\n\n\nimport leidenalg as la\n\npart = la.find_partition(g, la.RBConfigurationVertexPartition,\n                          resolution_parameter=0.15, seed=42)\nprint(len(set(part.membership)))\nprint(pd.Series(part.membership).value_counts().sort_index())\n4\n0    70\n1    70\n2    52\n3    28\nName: count, dtype: int64\n\n\n\nBoth languages recover four clusters of sizes 70, 70, 52, and 28, matching the four true communities exactly, though the two languages number the clusters differently. Now compare against the truth with the adjusted Rand index.\n\nRPython\n\n\nlibrary(mclust)\nadjustedRandIndex(membership(part), demo$true_community)\n[1] 1\n\n\nfrom sklearn.metrics import adjusted_rand_score\n\nadjusted_rand_score(demo[\"true_community\"], part.membership)\n1.0\n\n\n\nAn ARI of \\(1\\) confirms that the fitted grouping matches the known grouping. The cluster numbers can differ without changing the ARI.\n\n\n\n\n\n\n\nFigure 2.1: True communities on the left, the Leiden clustering on the right, at resolution 0.15 and k = 15. The two panels agree exactly, aside from color assignment.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#tune-the-resolution",
+    "href": "practice.html#tune-the-resolution",
+    "title": "2  Leiden with R and Python",
+    "section": "2.6 Tune the resolution",
+    "text": "2.6 Tune the resolution\nChapter 1 showed this comparison visually in Figure 1.12. Here we record the number of clusters and the ARI at each resolution.\n\nRPython\n\n\nres_values &lt;- c(0.02, 0.05, 0.15, 0.5, 1.0)\nres_sweep &lt;- data.frame(resolution = res_values, n_clusters = NA_integer_, ARI = NA_real_)\nfor (i in seq_along(res_values)) {\n  set.seed(42)\n  p &lt;- cluster_leiden(g, objective_function = \"modularity\",\n                       resolution = res_values[i], n_iterations = 2)\n  res_sweep$n_clusters[i] &lt;- length(unique(membership(p)))\n  res_sweep$ARI[i] &lt;- round(adjustedRandIndex(membership(p), demo$true_community), 4)\n}\nres_sweep\n  resolution n_clusters    ARI\n1       0.02          3 0.5835\n2       0.05          3 0.5835\n3       0.15          4 1.0000\n4       0.50          6 0.7087\n5       1.00          7 0.6582\n\n\nrows = []\nfor res in [0.02, 0.05, 0.15, 0.5, 1.0]:\n    p = la.find_partition(g, la.RBConfigurationVertexPartition,\n                           resolution_parameter=res, seed=42)\n    lab = p.membership\n    rows.append({\"resolution\": res, \"n_clusters\": len(set(lab)),\n                 \"ARI\": round(adjusted_rand_score(demo[\"true_community\"], lab), 4)})\npd.DataFrame(rows)\n   resolution  n_clusters     ARI\n0        0.02           2  0.3495\n1        0.05           3  0.8119\n2        0.15           4  1.0000\n3        0.50           6  0.7278\n4        1.00           8  0.6089\n\n\n\nBoth languages show the same pattern. Low resolutions merge groups. Resolution \\(0.15\\) recovers the known grouping. Higher resolutions split it into smaller clusters. R and Python differ at some settings because igraph and leidenalg use different optimizers. The sweep matters more than any one count. With real data, a known grouping is rarely available to select the resolution.\n\n\n\n\n\n\nImportantDefaults still need checking\n\n\n\nResolution \\(1.0\\) gives 7 or 8 clusters here and splits the four known groups. A default is not tuned to a particular dataset or graph.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#tune-the-neighbour-count",
+    "href": "practice.html#tune-the-neighbour-count",
+    "title": "2  Leiden with R and Python",
+    "section": "2.7 Tune the neighbour count",
+    "text": "2.7 Tune the neighbour count\nWe now hold the resolution at \\(0.15\\) and vary the number of neighbours used to build the graph.\n\nRPython\n\n\nk_values &lt;- c(3, 5, 8, 10, 15, 20, 30, 50)\nk_sweep &lt;- data.frame(k = k_values, n_edges = NA_integer_,\n                       n_clusters = NA_integer_, ARI = NA_real_)\nfor (i in seq_along(k_values)) {\n  gk &lt;- makeKNNGraph(X, k = k_values[i])\n  set.seed(42)\n  p &lt;- cluster_leiden(gk, objective_function = \"modularity\",\n                       resolution = 0.15, n_iterations = 2)\n  k_sweep$n_edges[i] &lt;- ecount(gk)\n  k_sweep$n_clusters[i] &lt;- length(unique(membership(p)))\n  k_sweep$ARI[i] &lt;- round(adjustedRandIndex(membership(p), demo$true_community), 4)\n}\nk_sweep\n   k n_edges n_clusters    ARI\n1  3     423         11 0.5627\n2  5     676          7 0.6722\n3  8    1058          5 0.8634\n4 10    1289          5 0.8634\n5 15    1925          4 1.0000\n6 20    2549          4 1.0000\n7 30    3767          3 0.5681\n8 50    6271          2 0.3776\n\n\nrows = []\nfor k in [3, 5, 8, 10, 15, 20, 30, 50]:\n    gk = knn_graph(X, k)\n    p = la.find_partition(gk, la.RBConfigurationVertexPartition,\n                           resolution_parameter=0.15, seed=42)\n    lab = p.membership\n    rows.append({\"k\": k, \"n_edges\": gk.ecount(), \"n_clusters\": len(set(lab)),\n                 \"ARI\": round(adjusted_rand_score(demo[\"true_community\"], lab), 4)})\npd.DataFrame(rows)\n    k  n_edges  n_clusters     ARI\n0   3      423          11  0.5627\n1   5      676           7  0.6722\n2   8     1058           5  0.8634\n3  10     1289           5  0.8634\n4  15     1925           4  1.0000\n5  20     2549           3  0.8119\n6  30     3767           3  0.5681\n7  50     6271           2  0.3776\n\n\n\nWith \\(k=3\\) or \\(5\\), the graph is sparse and Leiden produces too many clusters. Both languages recover the known grouping around \\(k=15\\). Larger values add connections between groups and clusters begin to merge. At \\(k=20\\), R still recovers four groups while Python merges two of them. The R and Python graphs have the same edge list, so this difference comes from the optimizers.\nThe neighbour count changes the graph itself. Across this sweep, the edge count changes from 423 to 6271. Resolution leaves the graph unchanged and changes only its partition. The two parameters therefore need separate checks.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#add-edge-weights",
+    "href": "practice.html#add-edge-weights",
+    "title": "2  Leiden with R and Python",
+    "section": "2.8 Add edge weights",
+    "text": "2.8 Add edge weights\nmakeKNNGraph() produces an unweighted graph. makeSNNGraph() builds a shared neighbour graph with Jaccard weights, as shown in Chapter 1 at Figure 1.6. The Python example uses a Gaussian weight based on distance. These are different weighting methods, but both show how weights can change a partition.\n\nRPython\n\n\ng_unw &lt;- makeKNNGraph(X, k = 20)\ng_w &lt;- makeSNNGraph(X, k = 20, type = \"jaccard\")\n\nset.seed(42)\np_unw &lt;- cluster_leiden(g_unw, objective_function = \"modularity\",\n                         resolution = 0.05, n_iterations = 2)\nset.seed(42)\np_w &lt;- cluster_leiden(g_w, objective_function = \"modularity\",\n                       resolution = 0.05, n_iterations = 2)\n\ncat(\"unweighted:\", length(unique(membership(p_unw))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_unw), demo$true_community), 4), \"\\n\")\ncat(\"weighted (SNN):\", length(unique(membership(p_w))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_w), demo$true_community), 4), \"\\n\")\nunweighted: 2 clusters, ARI = 0.3495\nweighted (SNN): 3 clusters, ARI = 0.5835\n\n\ndef weighted_knn_graph(X, k):\n    distances = kneighbors_graph(X, n_neighbors=k, mode=\"distance\")\n    sigma = np.median(distances.data)\n    distances = distances.maximum(distances.T)\n    distances.data = np.exp(-distances.data**2 / (2 * sigma**2))\n    return ig.Graph.Weighted_Adjacency(distances, mode=\"undirected\")\n\ng_unw = knn_graph(X, 20)\ng_w = weighted_knn_graph(X, 20)\n\np_unw = la.find_partition(g_unw, la.RBConfigurationVertexPartition,\n                           resolution_parameter=0.1, seed=42)\np_w = la.find_partition(g_w, la.RBConfigurationVertexPartition,\n                         resolution_parameter=0.1, weights=\"weight\", seed=42)\nprint(\"unweighted:\", len(set(p_unw.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_unw.membership), 4))\nprint(\"weighted:\", len(set(p_w.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_w.membership), 4))\nunweighted: 3 clusters, ARI = 0.8119\nweighted: 4 clusters, ARI = 1.0\n\n\n\nWeights change the clustering in both examples and improve the ARI at the settings shown. The results are not directly comparable. R uses Jaccard overlap and Python uses a Gaussian function of distance, so their resolution values are also different.\n\n\n\n\n\n\nNoteweights and use_weights\n\n\n\nIn R, weights = NULL uses a graph attribute named weight when one exists. Passing weights = NA forces an unweighted run. In both Python interfaces, weights must be passed explicitly. An attribute can be selected with weights=\"weight\".",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#check-stability-across-seeds",
+    "href": "practice.html#check-stability-across-seeds",
+    "title": "2  Leiden with R and Python",
+    "section": "2.9 Check stability across seeds",
+    "text": "2.9 Check stability across seeds\nLeiden uses randomness during refinement. We fit the same graph ten times and change only the seed. Resolution \\(0.5\\) makes the variation easy to see.\n\nRPython\n\n\nseed_labels &lt;- list()\nfor (seed in 0:9) {\n  set.seed(seed)\n  p &lt;- cluster_leiden(g, objective_function = \"modularity\",\n                       resolution = 0.5, n_iterations = 2)\n  seed_labels[[as.character(seed)]] &lt;- membership(p)\n}\nsapply(seed_labels, function(m) length(unique(m)))\nsapply(seed_labels[-1], function(m) round(adjustedRandIndex(m, seed_labels[[\"0\"]]), 4))\n     0      1      2      3      4      5      6      7      8      9\n     6      6      6      6      6      6      6      6      6      6\n\n     1      2      3      4      5      6      7      8      9\n1.0000 1.0000 1.0000 1.0000 1.0000 0.8923 1.0000 1.0000 0.9898\n\n\nseed_labels = []\nfor seed in range(10):\n    p = la.find_partition(g, la.RBConfigurationVertexPartition,\n                           resolution_parameter=0.5, seed=seed)\n    seed_labels.append(p.membership)\n\n[len(set(lab)) for lab in seed_labels]\n[round(adjusted_rand_score(seed_labels[0], lab), 4) for lab in seed_labels[1:]]\n[6, 6, 6, 6, 6, 6, 6, 6, 6, 6]\n[0.8923, 0.8923, 0.8923, 1.0, 0.8923, 0.8923, 0.8923, 0.8348, 0.8923]\n\n\n\nEvery run finds six clusters, but some observations change clusters. Agreement with the first run ranges from about \\(0.83\\) to \\(1.0\\). A stable cluster count shows that the optimizer repeatedly finds similar partitions for this graph and resolution. It does not establish that the clusters are scientifically meaningful.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#compare-cpm-and-modularity",
+    "href": "practice.html#compare-cpm-and-modularity",
+    "title": "2  Leiden with R and Python",
+    "section": "2.10 Compare CPM and modularity",
+    "text": "2.10 Compare CPM and modularity\nChapter 3 derives the CPM and modularity objectives. The package defaults differ.\n\nRPython\n\n\nset.seed(42)\np_cpm &lt;- cluster_leiden(g, objective_function = \"CPM\", resolution = 0.15, n_iterations = 2)\nset.seed(42)\np_mod &lt;- cluster_leiden(g, objective_function = \"modularity\", resolution = 1.0, n_iterations = 2)\ncat(\"CPM (resolution 0.15):\", length(unique(membership(p_cpm))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_cpm), demo$true_community), 4), \"\\n\")\ncat(\"modularity (resolution 1):\", length(unique(membership(p_mod))), \"clusters, ARI =\",\n    round(adjustedRandIndex(membership(p_mod), demo$true_community), 4), \"\\n\")\nCPM (resolution 0.15): 9 clusters, ARI = 0.5698\nmodularity (resolution 1): 7 clusters, ARI = 0.6582\n\n\np_cpm = la.find_partition(g, la.CPMVertexPartition, resolution_parameter=0.15, seed=42)\np_mod = la.find_partition(g, la.ModularityVertexPartition, seed=42)\nprint(\"CPM (resolution 0.15):\", len(set(p_cpm.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_cpm.membership), 4))\nprint(\"modularity (no resolution):\", len(set(p_mod.membership)), \"clusters, ARI =\",\n      round(adjusted_rand_score(demo[\"true_community\"], p_mod.membership), 4))\nCPM (resolution 0.15): 10 clusters, ARI = 0.5362\nmodularity (no resolution): 8 clusters, ARI = 0.6089\n\n\n\nleidenalg.ModularityVertexPartition implements classic modularity without an adjustable resolution. Its scale corresponds to resolution \\(1\\) in the R call. Neither result matches the known groups as well as the modularity run at resolution \\(0.15\\). A resolution selected for one objective cannot be transferred to another objective without checking it again.\n\n\n\n\n\n\nImportantDirect igraph calls default to CPM\n\n\n\nCalling igraph::cluster_leiden() or igraph.Graph.community_leiden() without an objective uses CPM at resolution \\(1\\). On this unweighted graph, the setting prevents any merge because an edge weight of \\(1\\) does not exceed \\(\\gamma = 1\\) in the CPM merge condition \\(E(R,S) &gt; \\gamma|R||S|\\).\n\n\n\nRPython\n\n\nset.seed(42)\np_default &lt;- cluster_leiden(g)\nlength(unique(membership(p_default)))\nhead(sort(table(membership(p_default)), decreasing = TRUE), 5)\n[1] 220\n\n  1   2   3   4   5\n  1   1   1   1   1\n\n\nvc = g.community_leiden()\nlen(vc)\nsorted(vc.sizes(), reverse=True)[:5]\n220\n[1, 1, 1, 1, 1]\n\n\n\nThe result contains 220 clusters with one observation each. Resolution \\(1\\) is too large for CPM with these unit edge weights. Seurat and Scanpy use different defaults in their clustering workflows.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#r-interfaces",
+    "href": "practice.html#r-interfaces",
+    "title": "2  Leiden with R and Python",
+    "section": "2.11 R interfaces",
+    "text": "2.11 R interfaces\nThe direct function is igraph::cluster_leiden().\nobjective_function accepts \"CPM\" or \"modularity\". weights = NULL detects a weight attribute and weights = NA ignores it. resolution defaults to \\(1\\). beta controls randomness during refinement and defaults to \\(0.01\\). initial_membership supplies a starting partition. n_iterations controls the number of full passes and defaults to \\(2\\).\nFor reproducibility, call set.seed() before cluster_leiden(). The function uses R’s global random number generator.\n\n2.11.1 Seurat\nIn Seurat, run FindNeighbors() and then FindClusters(algorithm = 4). Seurat expects coordinates stored in a dimensional reduction. Here the two simulated coordinates stand in for principal components. Chapter 4 applies the same interface after preprocessing gene expression data.\nlibrary(Seurat)\n\nX_named &lt;- X\nrownames(X_named) &lt;- demo$id\ncolnames(X_named) &lt;- c(\"toy_1\", \"toy_2\")\n\ndummy_counts &lt;- Matrix::Matrix(1, nrow = 3, ncol = nrow(X_named), sparse = TRUE,\n                                dimnames = list(c(\"g1\", \"g2\", \"g3\"), demo$id))\nobj &lt;- CreateSeuratObject(counts = dummy_counts)\nobj[[\"toy\"]] &lt;- CreateDimReducObject(embeddings = X_named, key = \"toy_\",\n                                      assay = DefaultAssay(obj))\n\nobj &lt;- FindNeighbors(obj, reduction = \"toy\", dims = 1:2, k.param = 15,\n                     verbose = FALSE)\nobj &lt;- FindClusters(obj, algorithm = 4, resolution = 0.2,\n                    random.seed = 42, verbose = FALSE)\n\nlength(unique(Idents(obj)))\nadjustedRandIndex(Idents(obj), demo$true_community)\nnames(obj@graphs)\n[1] 4\n[1] 0.9022\n[1] \"RNA_nn\" \"RNA_snn\"\nalgorithm = 4 selects Leiden. The default backend is leidenbase, which does not require Python. Setting leiden_method = \"igraph\" uses igraph::cluster_leiden() instead. With that backend, leiden_objective_function accepts \"modularity\" or \"CPM\".\nFindNeighbors() stores a nearest neighbour graph as RNA_nn and a Jaccard weighted shared neighbour graph as RNA_snn. FindClusters() uses RNA_snn by default. Resolution \\(0.2\\) works better here than \\(0.15\\) because this is not the plain neighbour graph used earlier.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#python-interfaces",
+    "href": "practice.html#python-interfaces",
+    "title": "2  Leiden with R and Python",
+    "section": "2.12 Python interfaces",
+    "text": "2.12 Python interfaces\nThe direct function is igraph.Graph.community_leiden(). Its objective, resolution, and beta arguments match the R function. Unlike R, Python does not select a weight edge attribute automatically.\nleidenalg.find_partition() uses a partition class instead of an objective string. RBConfigurationVertexPartition provides modularity with a resolution parameter. CPMVertexPartition provides CPM. ModularityVertexPartition provides classic modularity without an adjustable resolution. The weights argument takes an attribute name or a list of values. n_iterations defaults to \\(2\\), while a negative value runs until a pass gives no improvement. seed controls reproducibility.\n\n2.12.1 Scanpy\nIn Scanpy, run sc.pp.neighbors() and then sc.tl.leiden(). The simulated coordinates again stand in for principal components.\nimport anndata as ad\nimport scanpy as sc\n\nadata = ad.AnnData(X=np.zeros((len(X), 3), dtype=np.float32))\nadata.obs_names = demo[\"id\"].astype(str)\nadata.obsm[\"X_pca\"] = X\n\nsc.pp.neighbors(adata, n_neighbors=15, use_rep=\"X_pca\", random_state=0)\nsc.tl.leiden(adata, resolution=0.05, key_added=\"leiden_0.05\",\n             random_state=0, flavor=\"igraph\", n_iterations=2, directed=False)\n\nadata.obs[\"leiden_0.05\"].nunique()\nadjusted_rand_score(demo[\"true_community\"], adata.obs[\"leiden_0.05\"])\n4\n1.0\nsc.pp.neighbors() stores neighbour distances in adata.obsp[\"distances\"] and a weighted symmetric graph in adata.obsp[\"connectivities\"]. With the default method=\"umap\", the connectivity calculation uses UMAP’s fuzzy graph construction. sc.tl.leiden() clusters the connectivity graph.\n\n\n\n\n\n\nImportantState the Scanpy backend explicitly\n\n\n\nIn Scanpy 1.11.5, sc.tl.leiden() defaults to flavor=\"leidenalg\" and runs until convergence. The package warns that the backend will change to igraph. The example states flavor=\"igraph\", n_iterations=2, and directed=False so its behavior is clear.\nBoth Scanpy backends use a modularity objective by default. The leidenalg backend selects RBConfigurationVertexPartition. The igraph backend sets objective_function=\"modularity\". This differs from a direct call to igraph.Graph.community_leiden(), which defaults to CPM.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#inspect-the-result",
+    "href": "practice.html#inspect-the-result",
+    "title": "2  Leiden with R and Python",
+    "section": "2.13 Inspect the result",
+    "text": "2.13 Inspect the result\nBoth packages return the labels, the number and sizes of clusters, and the value of the optimized objective.\n\nRPython\n\n\nmembership(part)[1:10]            # label for each node\nlength(unique(membership(part)))  # number of clusters\npart$quality                      # objective value\ntable(membership(part))           # cluster sizes\n [1] 4 3 4 1 4 1 3 1 4 1\n[1] 4\n[1] 0.9427\n 1  2  3  4\n70 28 52 70\n\n\npart.membership[:10]              # label for each node\nlen(set(part.membership))         # number of clusters\npart.quality()                    # objective value\npd.Series(part.membership).value_counts().sort_index()\n[0, 3, 0, 2, 0, 1, 2, 2, 0, 3]\n4\n3629.3229\n0    70\n1    70\n2    52\n3    28\nName: count, dtype: int64\n\n\n\nThe quality values use different scales. R reports a normalized value and leidenalg reports the raw objective. The values cannot be compared across languages. They should also not be compared across graphs, objectives, resolutions, or weighting schemes. A higher value only identifies the better partition under the same optimization problem.\nSeurat stores labels in Idents(obj) and its graphs in obj@graphs. Scanpy stores labels in adata.obs[\"leiden_0.05\"] and the default graph in adata.obsp[\"connectivities\"].",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#what-clustering-quality-means",
+    "href": "practice.html#what-clustering-quality-means",
+    "title": "2  Leiden with R and Python",
+    "section": "2.14 What clustering quality means",
+    "text": "2.14 What clustering quality means\nThe word quality has two meanings here. The value returned by Leiden is optimization quality. It records how well a partition satisfies the selected objective. It does not show that the groups are correct or useful.\nOn these simulated data, ARI provides external quality because the true labels are known. Real data usually have no complete reference. Evaluation then combines several checks. Inspect whether conclusions persist across reasonable neighbour counts and resolutions. Repeat the fit across seeds. Look for very small or weakly separated clusters. In single cell data, also check whether clusters have coherent marker genes and whether they are driven by technical effects such as library size, batch, or poor quality cells.\nA stable result can still reflect a poor graph or an unsuitable objective. A high objective value can also describe a partition that is unhelpful for the scientific question. Quality therefore needs evidence from the optimization, sensitivity checks, and the subject matter.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden in practice</span>"
+    ]
+  },
+  {
+    "objectID": "practice.html#summary",
+    "href": "practice.html#summary",
+    "title": "2  Leiden with R and Python",
+    "section": "2.15 Summary",
+    "text": "2.15 Summary\nLeiden receives a graph, an objective, and a resolution. The neighbour count and weighting method define the graph. Resolution changes how that fixed graph is partitioned. Package defaults differ, so record these choices and check more than one reasonable setting. The exercise chapter applies this workflow to real single cell data, where the grouping is not known.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Leiden with R and Python</span>"
+    ]
+  },
+  {
+    "objectID": "intuition.html#how-refinement-works",
+    "href": "intuition.html#how-refinement-works",
+    "title": "1  Leiden clustering",
+    "section": "1.12 How refinement works",
+    "text": "1.12 How refinement works\nRefinement starts after local moving has stopped. Its input is the coarse partition produced by that step. In this example, the input contains one coarse parent community, \\(\\{A,B,C,D,E,F\\}\\). Local moving could not improve it by moving one node at a time, but that does not mean its internal structure is good.\nLeiden refines each coarse parent separately. Inside a parent, it creates a temporary partition in which every node starts as a singleton. A node may join another refined piece only when the move stays inside the same parent, passes the connection checks used by Leiden, and does not reduce the selected quality function at the chosen resolution. Among the acceptable moves, larger gains are preferred, with some randomness in the choice. Chapter 3 gives the exact calculation.\n\n\n\n\n\n\n\nFigure 1.10: Refinement inside the coarse community ABCDEF. Leiden restarts from six singleton pieces, accepts moves supported by the strong triangle edges, rejects a move across the weak bridge, and returns ABC and DEF as two refined pieces.\n\n\n\n\nFigure 1.10 shows one possible sequence.\n\nLocal moving supplies the coarse parent \\(\\{A,B,C,D,E,F\\}\\). The dashed boundary records that all six nodes currently have the same coarse community label.\nRefinement restarts the internal partition as \\(A|B|C|D|E|F\\). The parent boundary remains because every move is still restricted to this parent.\nThe strong edge between \\(A\\) and \\(B\\) supports a quality improving move, so they form the piece \\(AB\\). The same happens for \\(D\\) and \\(E\\), forming \\(DE\\). The accepted connections are green.\nNode \\(C\\) has two strong connections to \\(AB\\), so joining that piece improves quality. Node \\(F\\) joins \\(DE\\) for the same reason. The temporary partition is now \\(ABC|DEF\\).\nThe only connection across the two pieces is the edge from \\(C\\) to \\(D\\) with weight \\(0.20\\). At the settings used for this example, crossing that bridge lowers quality, so the move is rejected.\nRefinement returns \\(\\{A,B,C\\}\\) and \\(\\{D,E,F\\}\\). The blue and orange boundaries show the refined pieces.\n\nThe visiting order can change because refinement includes randomness. A different order might build the same pieces through a different sequence of accepted moves. The rules remain the same. Moves stay inside the coarse parent, must pass the connection checks, and cannot reduce quality.\nThe coarse partition and refined partition now serve different purposes. Refinement has not declared \\(ABC\\) and \\(DEF\\) to be final clusters. It has identified the units used to build the next graph. During aggregation, each refined piece becomes one node, while both nodes initially retain the community label of their shared coarse parent. The next local moving step can then reconsider either refined piece as a unit.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Leiden clustering</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-16-a-bit-more-aggregate-community-labels",
+    "href": "mathematics.html#step-16-a-bit-more-aggregate-community-labels",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.17 Step 16: a bit more aggregate community labels",
+    "text": "3.17 Step 16: a bit more aggregate community labels\nThis point is easy to state and easy to misread, so it deserves its own step.\nThe aggregate graph’s nodes are defined by the refined partition, \\(P_{\\mathrm{refined}} = \\{X, Y\\}\\) with \\(X=\\{A,B,C\\}\\) and \\(Y=\\{D,E,F\\}\\). But the initial community assignment on this new, smaller graph is not taken from the refined partition. It is taken from the original coarse partition, \\(P = \\{\\{A,B,C,D,E,F\\}\\}\\), the one local moving actually produced.\nBecause \\(P\\) contained all six original nodes in a single community, both \\(X\\) and \\(Y\\) start out labelled as belonging to that same community on the aggregate graph, even though they are two distinct nodes of that graph.\n\\[X \\neq Y \\quad \\text{as graph nodes,} \\qquad c_X = c_Y \\quad \\text{as their starting community label.}\\]\nRefinement did not simply split the coarse community into its final answer. It created two separately movable units, \\(X\\) and \\(Y\\), while temporarily preserving the coarser grouping as their shared starting point for the next round of local moving. Whether that shared starting point survives depends on what local moving does next.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#resolution",
+    "href": "mathematics.html#resolution",
+    "title": "3  How Leiden works mathematically",
+    "section": "4.2 Resolution",
+    "text": "4.2 Resolution\nFor CPM, merging pieces \\(R\\) and \\(S\\) raises the objective when\n\\[E(R,S) &gt; \\gamma\\,|R||S|.\\]\nThe connection between the pieces must exceed \\(\\gamma\\) times the number of new pairs created by the merge. Raising \\(\\gamma\\) therefore requires more edge weight.\nFor the final pieces \\(ABC\\) and \\(DEF\\), the only connecting edge has weight \\(0.2\\) and the size product is \\(3\\times3=9\\). Their merger improves quality only when \\(0.2 &gt; 9\\gamma\\). At \\(\\gamma=0.24\\), the right side is \\(2.16\\) and the pieces stay separate. At \\(\\gamma=0.02\\), the right side is \\(0.18\\) and merging them raises the score. The threshold depends on both the connection weight and the sizes of the pieces.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-10-the-connection-condition",
+    "href": "mathematics.html#step-10-the-connection-condition",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.11 Step 10: the connection condition",
+    "text": "3.11 Step 10: the connection condition\nA nonnegative gain is not the only requirement during refinement. Leiden first identifies singleton nodes that are sufficiently connected to their coarse parent. For each such node, it considers only destination pieces that are also sufficiently connected to that parent.\nFor a subset \\(S\\) inside a parent community \\(C\\), sufficient connection means\n\\[E\\big(S,\\ C\\setminus S\\big) \\,\\ge\\, \\gamma\\,|S|\\,|C\\setminus S|.\\]\nUsing \\(R = C\\setminus S\\) in the merge formula from Step 9 gives this condition from \\(\\Delta Q(S, C\\setminus S) \\geq 0\\). The connection from \\(S\\) to the rest of its parent must meet the threshold set by \\(\\gamma\\) and the number of pairs involved.\nConsider the move in which \\(C\\) joins the piece \\(\\{A,B\\}\\). The singleton \\(C\\) has total weight \\(2.2\\) to the other five nodes in its parent. Its condition is\n\\[2.2 \\geq (0.24)(1)(5) = 1.2.\\]\nThe destination \\(\\{A,B\\}\\) has total weight \\(2\\) to the other four nodes in the parent. Its condition is\n\\[2 \\geq (0.24)(2)(4) = 1.92.\\]\nBoth checks pass. The move also has the positive gain of \\(1.52\\) calculated in Step 9, so it is an acceptable refinement move. The conditions are checked before the move. The completed piece \\(\\{A,B,C\\}\\) is not required to pass the same check against \\(\\{D,E,F\\}\\) after the move.\nAfter each Leiden iteration, every resulting community is connected and satisfies the stronger \\(\\gamma\\) connection condition defined in the paper. Uniform density and subset optimality require repeated iterations. The connectivity guarantees section distinguishes these properties.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-16-initial-labels-on-the-aggregate-graph",
+    "href": "mathematics.html#step-16-initial-labels-on-the-aggregate-graph",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.17 Step 16: initial labels on the aggregate graph",
+    "text": "3.17 Step 16: initial labels on the aggregate graph\nThe aggregate graph’s nodes are defined by the refined partition, \\(P_{\\mathrm{refined}} = \\{X, Y\\}\\) with \\(X=\\{A,B,C\\}\\) and \\(Y=\\{D,E,F\\}\\). But the initial community assignment on this new, smaller graph is not taken from the refined partition. It is taken from the original coarse partition, \\(P = \\{\\{A,B,C,D,E,F\\}\\}\\), the one local moving actually produced.\nBecause \\(P\\) contained all six original nodes in a single community, both \\(X\\) and \\(Y\\) start out labelled as belonging to that same community on the aggregate graph, even though they are two distinct nodes of that graph.\n\\[X \\neq Y \\quad \\text{as graph nodes,} \\qquad c_X = c_Y \\quad \\text{as their starting community label.}\\]\nRefinement creates two movable units without making them final communities. Their shared coarse label provides the starting partition for the next local moving phase.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-7-individual-moves-cannot-split-the-coarse-partition",
+    "href": "mathematics.html#step-7-individual-moves-cannot-split-the-coarse-partition",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.8 Step 7: individual moves cannot split the coarse partition",
+    "text": "3.8 Step 7: individual moves cannot split the coarse partition\nApply the leaving formula to \\(A\\). Removing \\(A\\) from \\(\\{A,B,C,D,E,F\\}\\) leaves \\(\\{B,C,D,E,F\\}\\), a community of size \\(5\\).\n\\[\\Delta Q_A = -w(A, \\{B,C,D,E,F\\}) + \\gamma(6-1) = -(1+1) + (0.24)(5) = -2 + 1.2 = -0.8.\\]\n\\(A\\) has two edges of weight \\(1\\), so \\(w(A,\\text{rest}) = 2\\). The move lowers quality by \\(0.8\\) and is rejected. By symmetry, the same calculation gives \\(\\Delta Q = -0.8\\) for \\(B\\), \\(E\\), and \\(F\\).\n\n\n\n\n\n\n\nFigure 3.4: Removing A from the coarse community lowers the objective from 2.6 to 1.8.\n\n\n\n\nNow consider the boundary nodes \\(C\\) and \\(D\\), which touch the weak bridge.\n\\[\\Delta Q_C = -w(C,\\{A,B,D,E,F\\}) + \\gamma(5) = -(1+1+0.2) + 1.2 = -2.2+1.2 = -1.0.\\]\n\\(C\\) has edges to \\(A\\), \\(B\\), and \\(D\\), giving \\(1+1+0.2=2.2\\). Leaving lowers quality by \\(1.0\\), compared with \\(0.8\\) for \\(A\\). Both nodes receive the same reduction in the size penalty, but \\(C\\) would give up more internal edge weight. By symmetry, \\(\\Delta Q_D = -1.0\\).\nAll six single node departures lower quality. The partition is therefore a local optimum with respect to individual node moves. It need not be the best partition overall.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-8-comparing-the-two-partitions",
+    "href": "mathematics.html#step-8-comparing-the-two-partitions",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.9 Step 8: comparing the two partitions",
+    "text": "3.9 Step 8: comparing the two partitions\nCompare the coarse partition against \\(\\{A,B,C\\}, \\{D,E,F\\}\\). Each triangle has internal edge weight \\(e_C = 1+1+1=3\\) and size \\(n_C=3\\), giving \\(\\binom{3}{2}=3\\) pairs.\n\\[Q_{ABC} = 3 - (0.24)(3) = 3 - 0.72 = 2.28, \\qquad Q_{DEF} = 2.28 \\text{ by symmetry.}\\]\n\\[Q_{\\mathrm{refined}} = Q_{ABC} + Q_{DEF} = 2.28 + 2.28 = 4.56.\\]\n\n\n\n\n\n\n\nFigure 3.5: The partition {ABC},{DEF} scores 4.56 compared with 2.6 for the coarse partition.\n\n\n\n\nSince \\(4.56 &gt; 2.6\\), the partition into two triangles scores higher than the coarse partition. Step 7 showed why local moving cannot reach it from the chosen starting point. The improvement requires several nodes to change together.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-17-moving-refined-pieces",
+    "href": "mathematics.html#step-17-moving-refined-pieces",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.18 Step 17: moving refined pieces",
+    "text": "3.18 Step 17: moving refined pieces\nAt the original level, Step 7 showed that no individual node, \\(A\\) through \\(F\\), wanted to leave the coarse community on its own. Now run local moving again, on the aggregate graph, where \\(X\\) and \\(Y\\) are single nodes that happen to share a starting community label.\nLocal moving can now separate \\(X\\) from \\(Y\\) in one move. Before the move, both aggregate nodes share one community and the objective is \\(Q_{\\mathrm{coarse}} = 2.6\\). After the move, they form separate communities and the objective is \\(Q_{\\mathrm{refined}} = 4.56\\).\n\\[\\Delta Q = Q_{\\mathrm{refined}} - Q_{\\mathrm{coarse}} = 4.56 - 2.6 = 1.96.\\]\nAt the original level, local moving could move only one node at a time. On the aggregate graph, it can move a refined piece in one step.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  },
+  {
+    "objectID": "mathematics.html#step-20-algorithm-summary",
+    "href": "mathematics.html#step-20-algorithm-summary",
+    "title": "3  How Leiden works mathematically",
+    "section": "3.21 Step 20: algorithm summary",
+    "text": "3.21 Step 20: algorithm summary\n\n\n\n\n\n\n\nFigure 3.8: The complete Leiden procedure: local moving on the current graph until its queue is empty, refinement inside each resulting community, aggregation of the refined pieces into a smaller graph whose initial communities come from the coarse partition, repetition across levels, and a final flattening step back to the original nodes.\n\n\n\n\nFigure 3.8 summarizes the sequence. Local moving stops when its queue is empty. Refinement finds smaller connected pieces inside each community. Aggregation turns those pieces into nodes while using the coarse partition for their starting labels. Local moving then runs on the aggregate graph. The levels end when every current node has its own community, and the labels are mapped back to the original observations.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>How Leiden works mathematically</span>"
+    ]
+  }
+]

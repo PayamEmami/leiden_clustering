@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Leiden with R and Python – Leiden Clustering</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./mathematics.html" rel="next">
+<link href="./intuition.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6d144699ee5a3f285c99b12d480471d8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./practice.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Leiden in practice</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Leiden Clustering</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intuition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Leiden clustering</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./practice.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Leiden in practice</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mathematics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How Leiden works mathematically</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exercises.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Leiden exercises with PBMC3k</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">2.1</span> Setup</a></li>
+  <li><a href="#check-agreement-with-ari" id="toc-check-agreement-with-ari" class="nav-link" data-scroll-target="#check-agreement-with-ari"><span class="header-section-number">2.2</span> Check agreement with ARI</a></li>
+  <li><a href="#load-the-data" id="toc-load-the-data" class="nav-link" data-scroll-target="#load-the-data"><span class="header-section-number">2.3</span> Load the data</a></li>
+  <li><a href="#build-a-neighbour-graph" id="toc-build-a-neighbour-graph" class="nav-link" data-scroll-target="#build-a-neighbour-graph"><span class="header-section-number">2.4</span> Build a neighbour graph</a></li>
+  <li><a href="#fit-leiden" id="toc-fit-leiden" class="nav-link" data-scroll-target="#fit-leiden"><span class="header-section-number">2.5</span> Fit Leiden</a></li>
+  <li><a href="#tune-the-resolution" id="toc-tune-the-resolution" class="nav-link" data-scroll-target="#tune-the-resolution"><span class="header-section-number">2.6</span> Tune the resolution</a></li>
+  <li><a href="#tune-the-neighbour-count" id="toc-tune-the-neighbour-count" class="nav-link" data-scroll-target="#tune-the-neighbour-count"><span class="header-section-number">2.7</span> Tune the neighbour count</a></li>
+  <li><a href="#add-edge-weights" id="toc-add-edge-weights" class="nav-link" data-scroll-target="#add-edge-weights"><span class="header-section-number">2.8</span> Add edge weights</a></li>
+  <li><a href="#check-stability-across-seeds" id="toc-check-stability-across-seeds" class="nav-link" data-scroll-target="#check-stability-across-seeds"><span class="header-section-number">2.9</span> Check stability across seeds</a></li>
+  <li><a href="#compare-cpm-and-modularity" id="toc-compare-cpm-and-modularity" class="nav-link" data-scroll-target="#compare-cpm-and-modularity"><span class="header-section-number">2.10</span> Compare CPM and modularity</a></li>
+  <li><a href="#r-interfaces" id="toc-r-interfaces" class="nav-link" data-scroll-target="#r-interfaces"><span class="header-section-number">2.11</span> R interfaces</a>
+  <ul class="collapse">
+  <li><a href="#seurat" id="toc-seurat" class="nav-link" data-scroll-target="#seurat"><span class="header-section-number">2.11.1</span> Seurat</a></li>
+  </ul></li>
+  <li><a href="#python-interfaces" id="toc-python-interfaces" class="nav-link" data-scroll-target="#python-interfaces"><span class="header-section-number">2.12</span> Python interfaces</a>
+  <ul class="collapse">
+  <li><a href="#scanpy" id="toc-scanpy" class="nav-link" data-scroll-target="#scanpy"><span class="header-section-number">2.12.1</span> Scanpy</a></li>
+  </ul></li>
+  <li><a href="#inspect-the-result" id="toc-inspect-the-result" class="nav-link" data-scroll-target="#inspect-the-result"><span class="header-section-number">2.13</span> Inspect the result</a></li>
+  <li><a href="#what-clustering-quality-means" id="toc-what-clustering-quality-means" class="nav-link" data-scroll-target="#what-clustering-quality-means"><span class="header-section-number">2.14</span> What clustering quality means</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Leiden with R and Python</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This chapter applies Leiden to simulated data with a known grouping. The examples use established R and Python packages rather than reimplementing the algorithm. Because the correct grouping is known, we can see how each setting changes the result.</p>
+<section id="setup" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="setup"><span class="header-section-number">2.1</span> Setup</h2>
+<p>The R examples use <code>igraph</code> 2.3.1 for graphs and Leiden, <code>bluster</code> 1.20.0 for neighbour graphs, <code>mclust</code> for the adjusted Rand index, and <code>Seurat</code> 5.5.1 for a single cell workflow.</p>
+<p>The Python examples use <code>igraph</code> 1.0.0, <code>leidenalg</code> 0.12.0, <code>sklearn</code> 1.9.1 for neighbour search and ARI, and <code>scanpy</code> 1.11.5 for a single cell workflow.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Direct and package level interfaces
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>R’s <code>igraph::cluster_leiden()</code> and Python’s <code>igraph.Graph.community_leiden()</code> call the same underlying C library. Their main arguments and defaults match, except for automatic use of edge weights. R uses an edge attribute named <code>weight</code> when it is present. Python requires the attribute name or values to be passed through <code>weights</code>.</p>
+<p>Python’s <code>leidenalg.find_partition()</code> is a separate interface. It takes a partition class and uses <code>resolution_parameter</code> rather than <code>resolution</code>. Scanpy 1.11.5 can use either <code>leidenalg</code> or <code>igraph</code> as its backend, so this chapter shows both Python interfaces.</p>
+</div>
+</div>
+</section>
+<section id="check-agreement-with-ari" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="check-agreement-with-ari"><span class="header-section-number">2.2</span> Check agreement with ARI</h2>
+<p>The <strong>adjusted Rand index</strong>, or <strong>ARI</strong>, measures agreement between two groupings of the same observations. It compares whether pairs of observations are kept together or placed apart, then corrects for agreement expected by chance. An ARI of <span class="math inline">\(1\)</span> means perfect agreement. A value near <span class="math inline">\(0\)</span> means the agreement is close to chance. Group numbers do not need to match because ARI compares the grouping, not the labels assigned to it.</p>
+</section>
+<section id="load-the-data" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="load-the-data"><span class="header-section-number">2.3</span> Load the data</h2>
+<p>The dataset contains 220 points in two dimensions. Its four groups are two interleaved crescents, one small dense group, and one larger loose group. The same data appear in Chapter 1 at <a href="intuition.html#fig-point-cloud" class="quarto-xref">Figure&nbsp;<span>1.1</span></a>. They were generated once with a fixed seed and saved in <code>data/leiden_demo.csv</code>, so R and Python use identical observations and labels.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Practice files
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="data/leiden_demo.csv" download="leiden_demo.csv">Simulated data</a></p>
+<p><a href="data/six-node-graph.csv" download="six-node-graph.csv">Six node graph</a></p>
+<p>Keep the downloaded CSV files inside a folder named <code>data</code> when following the examples.</p>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>demo <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/leiden_demo.csv"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(demo)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(demo, <span class="dv">3</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(demo<span class="sc">$</span>true_community)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[1] 220   4
+  id        x          y true_community
+1  1 1.986200 -0.4189657     crescent_2
+2  2 4.509723  1.5924648     dense_blob
+3  3 2.714331  0.3573930     crescent_2
+
+crescent_1 crescent_2 dense_blob loose_blob
+        70         70         28         52</code></pre>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>demo <span class="op">=</span> pd.read_csv(<span class="st">"data/leiden_demo.csv"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(demo.shape)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(demo.head(<span class="dv">3</span>))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(demo[<span class="st">"true_community"</span>].value_counts())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>(220, 4)
+   id         x         y true_community
+0   1  1.986200 -0.418966     crescent_2
+1   2  4.509723  1.592465     dense_blob
+2   3  2.714331  0.357393     crescent_2
+true_community
+crescent_2    70
+crescent_1    70
+loose_blob    52
+dense_blob    28
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</div>
+<p>The <code>true_community</code> column is used only for evaluation. Leiden receives the <code>x</code> and <code>y</code> coordinates after they have been converted to a graph.</p>
+</section>
+<section id="build-a-neighbour-graph" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="build-a-neighbour-graph"><span class="header-section-number">2.4</span> Build a neighbour graph</h2>
+<p>We construct a nearest neighbour graph with <span class="math inline">\(k = 15\)</span>. Both examples use package functions for the neighbour search.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(igraph)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bluster)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(demo[, <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>)])</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">makeKNNGraph</span>(X, <span class="at">k =</span> <span class="dv">15</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">vcount</span>(g)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ecount</span>(g)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">is_directed</span>(g)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[1] 220
+[1] 1925
+[1] FALSE</code></pre>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> igraph <span class="im">as</span> ig</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.neighbors <span class="im">import</span> kneighbors_graph</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> demo[[<span class="st">"x"</span>, <span class="st">"y"</span>]].to_numpy()</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> knn_graph(X, k):</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    adjacency <span class="op">=</span> kneighbors_graph(X, n_neighbors<span class="op">=</span>k, mode<span class="op">=</span><span class="st">"connectivity"</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    adjacency <span class="op">=</span> adjacency.maximum(adjacency.T).astype(<span class="st">"int64"</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ig.Graph.Adjacency(adjacency, mode<span class="op">=</span><span class="st">"undirected"</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>g <span class="op">=</span> knn_graph(X, k<span class="op">=</span><span class="dv">15</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(g.vcount(), g.ecount(), g.is_directed())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>220 1925 False</code></pre>
+</div>
+</div>
+</div>
+<p><code>bluster::makeKNNGraph()</code> returns an <code>igraph</code> graph directly. In Python, <code>kneighbors_graph()</code> returns a sparse adjacency matrix and <code>igraph.Graph.Adjacency()</code> converts it to a graph. The call to <code>maximum()</code> keeps an edge when either point selected the other as a neighbour. Both routes produce 220 nodes and 1925 undirected edges.</p>
+</section>
+<section id="fit-leiden" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="fit-leiden"><span class="header-section-number">2.5</span> Fit Leiden</h2>
+<p>We use a modularity objective and resolution <span class="math inline">\(0.15\)</span>. The next two sections examine this choice.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>part <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g, <span class="at">objective_function =</span> <span class="st">"modularity"</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">resolution =</span> <span class="fl">0.15</span>, <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(part)))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">membership</span>(part))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[1] 4
+
+ 1  2  3  4
+70 28 52 70</code></pre>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> leidenalg <span class="im">as</span> la</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>part <span class="op">=</span> la.find_partition(g, la.RBConfigurationVertexPartition,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                          resolution_parameter<span class="op">=</span><span class="fl">0.15</span>, seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">len</span>(<span class="bu">set</span>(part.membership)))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pd.Series(part.membership).value_counts().sort_index())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>4
+0    70
+1    70
+2    52
+3    28
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</div>
+<p>Both languages recover four clusters of sizes 70, 70, 52, and 28, matching the four true communities exactly, though the two languages number the clusters differently. Now compare against the truth with the adjusted Rand index.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mclust)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">adjustedRandIndex</span>(<span class="fu">membership</span>(part), demo<span class="sc">$</span>true_community)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[1] 1</code></pre>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> adjusted_rand_score</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>adjusted_rand_score(demo[<span class="st">"true_community"</span>], part.membership)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>1.0</code></pre>
+</div>
+</div>
+</div>
+<p>An ARI of <span class="math inline">\(1\)</span> confirms that the fitted grouping matches the known grouping. The cluster numbers can differ without changing the ARI.</p>
+<div class="visual-card">
+<div id="fig-truth-vs-leiden" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two scatter plots of the same 220 points. The left plot is colored by the true community label. The right plot is colored by the Leiden cluster label. The four groups match exactly between the two panels, aside from which color is assigned to which group.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-truth-vs-leiden-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/21-truth-vs-leiden.png" class="img-fluid figure-img" alt="Two scatter plots of the same 220 points. The left plot is colored by the true community label. The right plot is colored by the Leiden cluster label. The four groups match exactly between the two panels, aside from which color is assigned to which group.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-truth-vs-leiden-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: True communities on the left, the Leiden clustering on the right, at resolution 0.15 and k = 15. The two panels agree exactly, aside from color assignment.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="tune-the-resolution" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="tune-the-resolution"><span class="header-section-number">2.6</span> Tune the resolution</h2>
+<p>Chapter 1 showed this comparison visually in <a href="intuition.html#fig-resolution-sweep" class="quarto-xref">Figure&nbsp;<span>1.12</span></a>. Here we record the number of clusters and the ARI at each resolution.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>res_values <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.02</span>, <span class="fl">0.05</span>, <span class="fl">0.15</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>res_sweep <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">resolution =</span> res_values, <span class="at">n_clusters =</span> <span class="cn">NA_integer_</span>, <span class="at">ARI =</span> <span class="cn">NA_real_</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(res_values)) {</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g, <span class="at">objective_function =</span> <span class="st">"modularity"</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">resolution =</span> res_values[i], <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  res_sweep<span class="sc">$</span>n_clusters[i] <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(p)))</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  res_sweep<span class="sc">$</span>ARI[i] <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">adjustedRandIndex</span>(<span class="fu">membership</span>(p), demo<span class="sc">$</span>true_community), <span class="dv">4</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>res_sweep</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>  resolution n_clusters    ARI
+1       0.02          3 0.5835
+2       0.05          3 0.5835
+3       0.15          4 1.0000
+4       0.50          6 0.7087
+5       1.00          7 0.6582</code></pre>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> res <span class="kw">in</span> [<span class="fl">0.02</span>, <span class="fl">0.05</span>, <span class="fl">0.15</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span>]:</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> la.find_partition(g, la.RBConfigurationVertexPartition,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                           resolution_parameter<span class="op">=</span>res, seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    lab <span class="op">=</span> p.membership</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    rows.append({<span class="st">"resolution"</span>: res, <span class="st">"n_clusters"</span>: <span class="bu">len</span>(<span class="bu">set</span>(lab)),</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"ARI"</span>: <span class="bu">round</span>(adjusted_rand_score(demo[<span class="st">"true_community"</span>], lab), <span class="dv">4</span>)})</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(rows)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>   resolution  n_clusters     ARI
+0        0.02           2  0.3495
+1        0.05           3  0.8119
+2        0.15           4  1.0000
+3        0.50           6  0.7278
+4        1.00           8  0.6089</code></pre>
+</div>
+</div>
+</div>
+<p>Both languages show the same pattern. Low resolutions merge groups. Resolution <span class="math inline">\(0.15\)</span> recovers the known grouping. Higher resolutions split it into smaller clusters. R and Python differ at some settings because <code>igraph</code> and <code>leidenalg</code> use different optimizers. The sweep matters more than any one count. With real data, a known grouping is rarely available to select the resolution.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Defaults still need checking
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Resolution <span class="math inline">\(1.0\)</span> gives 7 or 8 clusters here and splits the four known groups. A default is not tuned to a particular dataset or graph.</p>
+</div>
+</div>
+</section>
+<section id="tune-the-neighbour-count" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="tune-the-neighbour-count"><span class="header-section-number">2.7</span> Tune the neighbour count</h2>
+<p>We now hold the resolution at <span class="math inline">\(0.15\)</span> and vary the number of neighbours used to build the graph.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>k_values <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">50</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>k_sweep <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">k =</span> k_values, <span class="at">n_edges =</span> <span class="cn">NA_integer_</span>,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">n_clusters =</span> <span class="cn">NA_integer_</span>, <span class="at">ARI =</span> <span class="cn">NA_real_</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(k_values)) {</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  gk <span class="ot">&lt;-</span> <span class="fu">makeKNNGraph</span>(X, <span class="at">k =</span> k_values[i])</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(gk, <span class="at">objective_function =</span> <span class="st">"modularity"</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">resolution =</span> <span class="fl">0.15</span>, <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  k_sweep<span class="sc">$</span>n_edges[i] <span class="ot">&lt;-</span> <span class="fu">ecount</span>(gk)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  k_sweep<span class="sc">$</span>n_clusters[i] <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(p)))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  k_sweep<span class="sc">$</span>ARI[i] <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">adjustedRandIndex</span>(<span class="fu">membership</span>(p), demo<span class="sc">$</span>true_community), <span class="dv">4</span>)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>k_sweep</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>   k n_edges n_clusters    ARI
+1  3     423         11 0.5627
+2  5     676          7 0.6722
+3  8    1058          5 0.8634
+4 10    1289          5 0.8634
+5 15    1925          4 1.0000
+6 20    2549          4 1.0000
+7 30    3767          3 0.5681
+8 50    6271          2 0.3776</code></pre>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> [<span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">50</span>]:</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    gk <span class="op">=</span> knn_graph(X, k)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> la.find_partition(gk, la.RBConfigurationVertexPartition,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                           resolution_parameter<span class="op">=</span><span class="fl">0.15</span>, seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    lab <span class="op">=</span> p.membership</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    rows.append({<span class="st">"k"</span>: k, <span class="st">"n_edges"</span>: gk.ecount(), <span class="st">"n_clusters"</span>: <span class="bu">len</span>(<span class="bu">set</span>(lab)),</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"ARI"</span>: <span class="bu">round</span>(adjusted_rand_score(demo[<span class="st">"true_community"</span>], lab), <span class="dv">4</span>)})</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(rows)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>    k  n_edges  n_clusters     ARI
+0   3      423          11  0.5627
+1   5      676           7  0.6722
+2   8     1058           5  0.8634
+3  10     1289           5  0.8634
+4  15     1925           4  1.0000
+5  20     2549           3  0.8119
+6  30     3767           3  0.5681
+7  50     6271           2  0.3776</code></pre>
+</div>
+</div>
+</div>
+<p>With <span class="math inline">\(k=3\)</span> or <span class="math inline">\(5\)</span>, the graph is sparse and Leiden produces too many clusters. Both languages recover the known grouping around <span class="math inline">\(k=15\)</span>. Larger values add connections between groups and clusters begin to merge. At <span class="math inline">\(k=20\)</span>, R still recovers four groups while Python merges two of them. The R and Python graphs have the same edge list, so this difference comes from the optimizers.</p>
+<p>The neighbour count changes the graph itself. Across this sweep, the edge count changes from 423 to 6271. Resolution leaves the graph unchanged and changes only its partition. The two parameters therefore need separate checks.</p>
+</section>
+<section id="add-edge-weights" class="level2" data-number="2.8">
+<h2 data-number="2.8" class="anchored" data-anchor-id="add-edge-weights"><span class="header-section-number">2.8</span> Add edge weights</h2>
+<p><code>makeKNNGraph()</code> produces an unweighted graph. <code>makeSNNGraph()</code> builds a shared neighbour graph with Jaccard weights, as shown in Chapter 1 at <a href="intuition.html#fig-knn-snn" class="quarto-xref">Figure&nbsp;<span>1.6</span></a>. The Python example uses a Gaussian weight based on distance. These are different weighting methods, but both show how weights can change a partition.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>g_unw <span class="ot">&lt;-</span> <span class="fu">makeKNNGraph</span>(X, <span class="at">k =</span> <span class="dv">20</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>g_w <span class="ot">&lt;-</span> <span class="fu">makeSNNGraph</span>(X, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">type =</span> <span class="st">"jaccard"</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>p_unw <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g_unw, <span class="at">objective_function =</span> <span class="st">"modularity"</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>                         <span class="at">resolution =</span> <span class="fl">0.05</span>, <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>p_w <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g_w, <span class="at">objective_function =</span> <span class="st">"modularity"</span>,</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>                       <span class="at">resolution =</span> <span class="fl">0.05</span>, <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"unweighted:"</span>, <span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(p_unw))), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="fu">adjustedRandIndex</span>(<span class="fu">membership</span>(p_unw), demo<span class="sc">$</span>true_community), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"weighted (SNN):"</span>, <span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(p_w))), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="fu">adjustedRandIndex</span>(<span class="fu">membership</span>(p_w), demo<span class="sc">$</span>true_community), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>unweighted: 2 clusters, ARI = 0.3495
+weighted (SNN): 3 clusters, ARI = 0.5835</code></pre>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> weighted_knn_graph(X, k):</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    distances <span class="op">=</span> kneighbors_graph(X, n_neighbors<span class="op">=</span>k, mode<span class="op">=</span><span class="st">"distance"</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    sigma <span class="op">=</span> np.median(distances.data)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    distances <span class="op">=</span> distances.maximum(distances.T)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    distances.data <span class="op">=</span> np.exp(<span class="op">-</span>distances.data<span class="op">**</span><span class="dv">2</span> <span class="op">/</span> (<span class="dv">2</span> <span class="op">*</span> sigma<span class="op">**</span><span class="dv">2</span>))</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ig.Graph.Weighted_Adjacency(distances, mode<span class="op">=</span><span class="st">"undirected"</span>)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>g_unw <span class="op">=</span> knn_graph(X, <span class="dv">20</span>)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>g_w <span class="op">=</span> weighted_knn_graph(X, <span class="dv">20</span>)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>p_unw <span class="op">=</span> la.find_partition(g_unw, la.RBConfigurationVertexPartition,</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>                           resolution_parameter<span class="op">=</span><span class="fl">0.1</span>, seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>p_w <span class="op">=</span> la.find_partition(g_w, la.RBConfigurationVertexPartition,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>                         resolution_parameter<span class="op">=</span><span class="fl">0.1</span>, weights<span class="op">=</span><span class="st">"weight"</span>, seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"unweighted:"</span>, <span class="bu">len</span>(<span class="bu">set</span>(p_unw.membership)), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>      <span class="bu">round</span>(adjusted_rand_score(demo[<span class="st">"true_community"</span>], p_unw.membership), <span class="dv">4</span>))</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"weighted:"</span>, <span class="bu">len</span>(<span class="bu">set</span>(p_w.membership)), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>      <span class="bu">round</span>(adjusted_rand_score(demo[<span class="st">"true_community"</span>], p_w.membership), <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>unweighted: 3 clusters, ARI = 0.8119
+weighted: 4 clusters, ARI = 1.0</code></pre>
+</div>
+</div>
+</div>
+<p>Weights change the clustering in both examples and improve the ARI at the settings shown. The results are not directly comparable. R uses Jaccard overlap and Python uses a Gaussian function of distance, so their resolution values are also different.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><code>weights</code> and <code>use_weights</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In R, <code>weights = NULL</code> uses a graph attribute named <code>weight</code> when one exists. Passing <code>weights = NA</code> forces an unweighted run. In both Python interfaces, weights must be passed explicitly. An attribute can be selected with <code>weights="weight"</code>.</p>
+</div>
+</div>
+</section>
+<section id="check-stability-across-seeds" class="level2" data-number="2.9">
+<h2 data-number="2.9" class="anchored" data-anchor-id="check-stability-across-seeds"><span class="header-section-number">2.9</span> Check stability across seeds</h2>
+<p>Leiden uses randomness during refinement. We fit the same graph ten times and change only the seed. Resolution <span class="math inline">\(0.5\)</span> makes the variation easy to see.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>seed_labels <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (seed <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">9</span>) {</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g, <span class="at">objective_function =</span> <span class="st">"modularity"</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">resolution =</span> <span class="fl">0.5</span>, <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  seed_labels[[<span class="fu">as.character</span>(seed)]] <span class="ot">&lt;-</span> <span class="fu">membership</span>(p)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(seed_labels, <span class="cf">function</span>(m) <span class="fu">length</span>(<span class="fu">unique</span>(m)))</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(seed_labels[<span class="sc">-</span><span class="dv">1</span>], <span class="cf">function</span>(m) <span class="fu">round</span>(<span class="fu">adjustedRandIndex</span>(m, seed_labels[[<span class="st">"0"</span>]]), <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>     0      1      2      3      4      5      6      7      8      9
+     6      6      6      6      6      6      6      6      6      6
+
+     1      2      3      4      5      6      7      8      9
+1.0000 1.0000 1.0000 1.0000 1.0000 0.8923 1.0000 1.0000 0.9898</code></pre>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>seed_labels <span class="op">=</span> []</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> la.find_partition(g, la.RBConfigurationVertexPartition,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>                           resolution_parameter<span class="op">=</span><span class="fl">0.5</span>, seed<span class="op">=</span>seed)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    seed_labels.append(p.membership)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>[<span class="bu">len</span>(<span class="bu">set</span>(lab)) <span class="cf">for</span> lab <span class="kw">in</span> seed_labels]</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>[<span class="bu">round</span>(adjusted_rand_score(seed_labels[<span class="dv">0</span>], lab), <span class="dv">4</span>) <span class="cf">for</span> lab <span class="kw">in</span> seed_labels[<span class="dv">1</span>:]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+[0.8923, 0.8923, 0.8923, 1.0, 0.8923, 0.8923, 0.8923, 0.8348, 0.8923]</code></pre>
+</div>
+</div>
+</div>
+<p>Every run finds six clusters, but some observations change clusters. Agreement with the first run ranges from about <span class="math inline">\(0.83\)</span> to <span class="math inline">\(1.0\)</span>. A stable cluster count shows that the optimizer repeatedly finds similar partitions for this graph and resolution. It does not establish that the clusters are scientifically meaningful.</p>
+</section>
+<section id="compare-cpm-and-modularity" class="level2" data-number="2.10">
+<h2 data-number="2.10" class="anchored" data-anchor-id="compare-cpm-and-modularity"><span class="header-section-number">2.10</span> Compare CPM and modularity</h2>
+<p>Chapter 3 derives the CPM and modularity objectives. The package defaults differ.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>p_cpm <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g, <span class="at">objective_function =</span> <span class="st">"CPM"</span>, <span class="at">resolution =</span> <span class="fl">0.15</span>, <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>p_mod <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g, <span class="at">objective_function =</span> <span class="st">"modularity"</span>, <span class="at">resolution =</span> <span class="fl">1.0</span>, <span class="at">n_iterations =</span> <span class="dv">2</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"CPM (resolution 0.15):"</span>, <span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(p_cpm))), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="fu">adjustedRandIndex</span>(<span class="fu">membership</span>(p_cpm), demo<span class="sc">$</span>true_community), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"modularity (resolution 1):"</span>, <span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(p_mod))), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="fu">adjustedRandIndex</span>(<span class="fu">membership</span>(p_mod), demo<span class="sc">$</span>true_community), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>CPM (resolution 0.15): 9 clusters, ARI = 0.5698
+modularity (resolution 1): 7 clusters, ARI = 0.6582</code></pre>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>p_cpm <span class="op">=</span> la.find_partition(g, la.CPMVertexPartition, resolution_parameter<span class="op">=</span><span class="fl">0.15</span>, seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>p_mod <span class="op">=</span> la.find_partition(g, la.ModularityVertexPartition, seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"CPM (resolution 0.15):"</span>, <span class="bu">len</span>(<span class="bu">set</span>(p_cpm.membership)), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>      <span class="bu">round</span>(adjusted_rand_score(demo[<span class="st">"true_community"</span>], p_cpm.membership), <span class="dv">4</span>))</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"modularity (no resolution):"</span>, <span class="bu">len</span>(<span class="bu">set</span>(p_mod.membership)), <span class="st">"clusters, ARI ="</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>      <span class="bu">round</span>(adjusted_rand_score(demo[<span class="st">"true_community"</span>], p_mod.membership), <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>CPM (resolution 0.15): 10 clusters, ARI = 0.5362
+modularity (no resolution): 8 clusters, ARI = 0.6089</code></pre>
+</div>
+</div>
+</div>
+<p><code>leidenalg.ModularityVertexPartition</code> implements classic modularity without an adjustable resolution. Its scale corresponds to resolution <span class="math inline">\(1\)</span> in the R call. Neither result matches the known groups as well as the modularity run at resolution <span class="math inline">\(0.15\)</span>. A resolution selected for one objective cannot be transferred to another objective without checking it again.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Direct igraph calls default to CPM
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Calling <code>igraph::cluster_leiden()</code> or <code>igraph.Graph.community_leiden()</code> without an objective uses <strong>CPM</strong> at resolution <span class="math inline">\(1\)</span>. On this unweighted graph, the setting prevents any merge because an edge weight of <span class="math inline">\(1\)</span> does not exceed <span class="math inline">\(\gamma = 1\)</span> in the CPM merge condition <span class="math inline">\(E(R,S) &gt; \gamma|R||S|\)</span>.</p>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>p_default <span class="ot">&lt;-</span> <span class="fu">cluster_leiden</span>(g)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(p_default)))</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">sort</span>(<span class="fu">table</span>(<span class="fu">membership</span>(p_default)), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[1] 220
+
+  1   2   3   4   5
+  1   1   1   1   1</code></pre>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>vc <span class="op">=</span> g.community_leiden()</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="bu">len</span>(vc)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="bu">sorted</span>(vc.sizes(), reverse<span class="op">=</span><span class="va">True</span>)[:<span class="dv">5</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>220
+[1, 1, 1, 1, 1]</code></pre>
+</div>
+</div>
+</div>
+<p>The result contains 220 clusters with one observation each. Resolution <span class="math inline">\(1\)</span> is too large for CPM with these unit edge weights. Seurat and Scanpy use different defaults in their clustering workflows.</p>
+</section>
+<section id="r-interfaces" class="level2" data-number="2.11">
+<h2 data-number="2.11" class="anchored" data-anchor-id="r-interfaces"><span class="header-section-number">2.11</span> R interfaces</h2>
+<p>The direct function is <code>igraph::cluster_leiden()</code>.</p>
+<p><code>objective_function</code> accepts <code>"CPM"</code> or <code>"modularity"</code>. <code>weights = NULL</code> detects a <code>weight</code> attribute and <code>weights = NA</code> ignores it. <code>resolution</code> defaults to <span class="math inline">\(1\)</span>. <code>beta</code> controls randomness during refinement and defaults to <span class="math inline">\(0.01\)</span>. <code>initial_membership</code> supplies a starting partition. <code>n_iterations</code> controls the number of full passes and defaults to <span class="math inline">\(2\)</span>.</p>
+<p>For reproducibility, call <code>set.seed()</code> before <code>cluster_leiden()</code>. The function uses R’s global random number generator.</p>
+<section id="seurat" class="level3" data-number="2.11.1">
+<h3 data-number="2.11.1" class="anchored" data-anchor-id="seurat"><span class="header-section-number">2.11.1</span> Seurat</h3>
+<p>In Seurat, run <code>FindNeighbors()</code> and then <code>FindClusters(algorithm = 4)</code>. Seurat expects coordinates stored in a dimensional reduction. Here the two simulated coordinates stand in for principal components. Chapter 4 applies the same interface after preprocessing gene expression data.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Seurat)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>X_named <span class="ot">&lt;-</span> X</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(X_named) <span class="ot">&lt;-</span> demo<span class="sc">$</span>id</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(X_named) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"toy_1"</span>, <span class="st">"toy_2"</span>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>dummy_counts <span class="ot">&lt;-</span> Matrix<span class="sc">::</span><span class="fu">Matrix</span>(<span class="dv">1</span>, <span class="at">nrow =</span> <span class="dv">3</span>, <span class="at">ncol =</span> <span class="fu">nrow</span>(X_named), <span class="at">sparse =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>                                <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">"g1"</span>, <span class="st">"g2"</span>, <span class="st">"g3"</span>), demo<span class="sc">$</span>id))</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(<span class="at">counts =</span> dummy_counts)</span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>obj[[<span class="st">"toy"</span>]] <span class="ot">&lt;-</span> <span class="fu">CreateDimReducObject</span>(<span class="at">embeddings =</span> X_named, <span class="at">key =</span> <span class="st">"toy_"</span>,</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">assay =</span> <span class="fu">DefaultAssay</span>(obj))</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindNeighbors</span>(obj, <span class="at">reduction =</span> <span class="st">"toy"</span>, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">k.param =</span> <span class="dv">15</span>,</span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(obj, <span class="at">algorithm =</span> <span class="dv">4</span>, <span class="at">resolution =</span> <span class="fl">0.2</span>,</span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>                    <span class="at">random.seed =</span> <span class="dv">42</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">Idents</span>(obj)))</span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a><span class="fu">adjustedRandIndex</span>(<span class="fu">Idents</span>(obj), demo<span class="sc">$</span>true_community)</span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(obj<span class="sc">@</span>graphs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[1] 4
+[1] 0.9022
+[1] "RNA_nn" "RNA_snn"</code></pre>
+<p><code>algorithm = 4</code> selects Leiden. The default backend is <code>leidenbase</code>, which does not require Python. Setting <code>leiden_method = "igraph"</code> uses <code>igraph::cluster_leiden()</code> instead. With that backend, <code>leiden_objective_function</code> accepts <code>"modularity"</code> or <code>"CPM"</code>.</p>
+<p><code>FindNeighbors()</code> stores a nearest neighbour graph as <code>RNA_nn</code> and a Jaccard weighted shared neighbour graph as <code>RNA_snn</code>. <code>FindClusters()</code> uses <code>RNA_snn</code> by default. Resolution <span class="math inline">\(0.2\)</span> works better here than <span class="math inline">\(0.15\)</span> because this is not the plain neighbour graph used earlier.</p>
+</section>
+</section>
+<section id="python-interfaces" class="level2" data-number="2.12">
+<h2 data-number="2.12" class="anchored" data-anchor-id="python-interfaces"><span class="header-section-number">2.12</span> Python interfaces</h2>
+<p>The direct function is <code>igraph.Graph.community_leiden()</code>. Its objective, resolution, and beta arguments match the R function. Unlike R, Python does not select a <code>weight</code> edge attribute automatically.</p>
+<p><code>leidenalg.find_partition()</code> uses a partition class instead of an objective string. <code>RBConfigurationVertexPartition</code> provides modularity with a resolution parameter. <code>CPMVertexPartition</code> provides CPM. <code>ModularityVertexPartition</code> provides classic modularity without an adjustable resolution. The <code>weights</code> argument takes an attribute name or a list of values. <code>n_iterations</code> defaults to <span class="math inline">\(2\)</span>, while a negative value runs until a pass gives no improvement. <code>seed</code> controls reproducibility.</p>
+<section id="scanpy" class="level3" data-number="2.12.1">
+<h3 data-number="2.12.1" class="anchored" data-anchor-id="scanpy"><span class="header-section-number">2.12.1</span> Scanpy</h3>
+<p>In Scanpy, run <code>sc.pp.neighbors()</code> and then <code>sc.tl.leiden()</code>. The simulated coordinates again stand in for principal components.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> anndata <span class="im">as</span> ad</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scanpy <span class="im">as</span> sc</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>adata <span class="op">=</span> ad.AnnData(X<span class="op">=</span>np.zeros((<span class="bu">len</span>(X), <span class="dv">3</span>), dtype<span class="op">=</span>np.float32))</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>adata.obs_names <span class="op">=</span> demo[<span class="st">"id"</span>].astype(<span class="bu">str</span>)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>adata.obsm[<span class="st">"X_pca"</span>] <span class="op">=</span> X</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>sc.pp.neighbors(adata, n_neighbors<span class="op">=</span><span class="dv">15</span>, use_rep<span class="op">=</span><span class="st">"X_pca"</span>, random_state<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>sc.tl.leiden(adata, resolution<span class="op">=</span><span class="fl">0.05</span>, key_added<span class="op">=</span><span class="st">"leiden_0.05"</span>,</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>             random_state<span class="op">=</span><span class="dv">0</span>, flavor<span class="op">=</span><span class="st">"igraph"</span>, n_iterations<span class="op">=</span><span class="dv">2</span>, directed<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>adata.obs[<span class="st">"leiden_0.05"</span>].nunique()</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>adjusted_rand_score(demo[<span class="st">"true_community"</span>], adata.obs[<span class="st">"leiden_0.05"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>4
+1.0</code></pre>
+<p><code>sc.pp.neighbors()</code> stores neighbour distances in <code>adata.obsp["distances"]</code> and a weighted symmetric graph in <code>adata.obsp["connectivities"]</code>. With the default <code>method="umap"</code>, the connectivity calculation uses UMAP’s fuzzy graph construction. <code>sc.tl.leiden()</code> clusters the connectivity graph.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>State the Scanpy backend explicitly
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In Scanpy 1.11.5, <code>sc.tl.leiden()</code> defaults to <code>flavor="leidenalg"</code> and runs until convergence. The package warns that the backend will change to <code>igraph</code>. The example states <code>flavor="igraph"</code>, <code>n_iterations=2</code>, and <code>directed=False</code> so its behavior is clear.</p>
+<p>Both Scanpy backends use a modularity objective by default. The <code>leidenalg</code> backend selects <code>RBConfigurationVertexPartition</code>. The <code>igraph</code> backend sets <code>objective_function="modularity"</code>. This differs from a direct call to <code>igraph.Graph.community_leiden()</code>, which defaults to CPM.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="inspect-the-result" class="level2" data-number="2.13">
+<h2 data-number="2.13" class="anchored" data-anchor-id="inspect-the-result"><span class="header-section-number">2.13</span> Inspect the result</h2>
+<p>Both packages return the labels, the number and sizes of clusters, and the value of the optimized objective.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">membership</span>(part)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]            <span class="co"># label for each node</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(<span class="fu">membership</span>(part)))  <span class="co"># number of clusters</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>part<span class="sc">$</span>quality                      <span class="co"># objective value</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">membership</span>(part))           <span class="co"># cluster sizes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code> [1] 4 3 4 1 4 1 3 1 4 1
+[1] 4
+[1] 0.9427
+ 1  2  3  4
+70 28 52 70</code></pre>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>part.membership[:<span class="dv">10</span>]              <span class="co"># label for each node</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="bu">len</span>(<span class="bu">set</span>(part.membership))         <span class="co"># number of clusters</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>part.quality()                    <span class="co"># objective value</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>pd.Series(part.membership).value_counts().sort_index()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[0, 3, 0, 2, 0, 1, 2, 2, 0, 3]
+4
+3629.3229
+0    70
+1    70
+2    52
+3    28
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</div>
+<p>The quality values use different scales. R reports a normalized value and <code>leidenalg</code> reports the raw objective. The values cannot be compared across languages. They should also not be compared across graphs, objectives, resolutions, or weighting schemes. A higher value only identifies the better partition under the same optimization problem.</p>
+<p>Seurat stores labels in <code>Idents(obj)</code> and its graphs in <code>obj@graphs</code>. Scanpy stores labels in <code>adata.obs["leiden_0.05"]</code> and the default graph in <code>adata.obsp["connectivities"]</code>.</p>
+</section>
+<section id="what-clustering-quality-means" class="level2" data-number="2.14">
+<h2 data-number="2.14" class="anchored" data-anchor-id="what-clustering-quality-means"><span class="header-section-number">2.14</span> What clustering quality means</h2>
+<p>The word quality has two meanings here. The value returned by Leiden is <strong>optimization quality</strong>. It records how well a partition satisfies the selected objective. It does not show that the groups are correct or useful.</p>
+<p>On these simulated data, ARI provides <strong>external quality</strong> because the true labels are known. Real data usually have no complete reference. Evaluation then combines several checks. Inspect whether conclusions persist across reasonable neighbour counts and resolutions. Repeat the fit across seeds. Look for very small or weakly separated clusters. In single cell data, also check whether clusters have coherent marker genes and whether they are driven by technical effects such as library size, batch, or poor quality cells.</p>
+<p>A stable result can still reflect a poor graph or an unsuitable objective. A high objective value can also describe a partition that is unhelpful for the scientific question. Quality therefore needs evidence from the optimization, sensitivity checks, and the subject matter.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./intuition.html" class="pagination-link" aria-label="Leiden clustering">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Leiden clustering</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./mathematics.html" class="pagination-link" aria-label="How Leiden works mathematically">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How Leiden works mathematically</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>1&nbsp; Leiden clustering – Leiden Clustering</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./practice.html" rel="next">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6d144699ee5a3f285c99b12d480471d8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./intuition.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Leiden clustering</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Leiden Clustering</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intuition.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Leiden clustering</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Leiden in practice</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mathematics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How Leiden works mathematically</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exercises.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Leiden exercises with PBMC3k</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-coordinates-to-a-graph" id="toc-from-coordinates-to-a-graph" class="nav-link active" data-scroll-target="#from-coordinates-to-a-graph"><span class="header-section-number">1.1</span> From coordinates to a graph</a></li>
+  <li><a href="#a-point-cloud" id="toc-a-point-cloud" class="nav-link" data-scroll-target="#a-point-cloud"><span class="header-section-number">1.2</span> A point cloud</a></li>
+  <li><a href="#building-a-neighbour-graph" id="toc-building-a-neighbour-graph" class="nav-link" data-scroll-target="#building-a-neighbour-graph"><span class="header-section-number">1.3</span> Building a neighbour graph</a></li>
+  <li><a href="#from-graph-to-communities" id="toc-from-graph-to-communities" class="nav-link" data-scroll-target="#from-graph-to-communities"><span class="header-section-number">1.4</span> From graph to communities</a></li>
+  <li><a href="#the-same-pipeline-in-single-cell-analysis" id="toc-the-same-pipeline-in-single-cell-analysis" class="nav-link" data-scroll-target="#the-same-pipeline-in-single-cell-analysis"><span class="header-section-number">1.5</span> The same pipeline in single-cell analysis</a></li>
+  <li><a href="#knn-and-snn-graphs" id="toc-knn-and-snn-graphs" class="nav-link" data-scroll-target="#knn-and-snn-graphs"><span class="header-section-number">1.6</span> KNN and SNN graphs</a></li>
+  <li><a href="#what-is-a-graph-community" id="toc-what-is-a-graph-community" class="nav-link" data-scroll-target="#what-is-a-graph-community"><span class="header-section-number">1.7</span> What is a graph community?</a></li>
+  <li><a href="#leiden-compared-with-familiar-clustering-methods" id="toc-leiden-compared-with-familiar-clustering-methods" class="nav-link" data-scroll-target="#leiden-compared-with-familiar-clustering-methods"><span class="header-section-number">1.8</span> Leiden compared with familiar clustering methods</a></li>
+  <li><a href="#introducing-louvain" id="toc-introducing-louvain" class="nav-link" data-scroll-target="#introducing-louvain"><span class="header-section-number">1.9</span> Introducing Louvain</a></li>
+  <li><a href="#where-louvain-can-get-stuck" id="toc-where-louvain-can-get-stuck" class="nav-link" data-scroll-target="#where-louvain-can-get-stuck"><span class="header-section-number">1.10</span> Where Louvain can get stuck</a></li>
+  <li><a href="#leidens-answer-local-moving-refinement-aggregation" id="toc-leidens-answer-local-moving-refinement-aggregation" class="nav-link" data-scroll-target="#leidens-answer-local-moving-refinement-aggregation"><span class="header-section-number">1.11</span> Leiden’s answer: local moving, refinement, aggregation</a></li>
+  <li><a href="#how-refinement-works" id="toc-how-refinement-works" class="nav-link" data-scroll-target="#how-refinement-works"><span class="header-section-number">1.12</span> How refinement works</a></li>
+  <li><a href="#supernodes" id="toc-supernodes" class="nav-link" data-scroll-target="#supernodes"><span class="header-section-number">1.13</span> Supernodes</a></li>
+  <li><a href="#resolution" id="toc-resolution" class="nav-link" data-scroll-target="#resolution"><span class="header-section-number">1.14</span> Resolution</a></li>
+  <li><a href="#weighted-versus-unweighted-graphs" id="toc-weighted-versus-unweighted-graphs" class="nav-link" data-scroll-target="#weighted-versus-unweighted-graphs"><span class="header-section-number">1.15</span> Weighted versus unweighted graphs</a></li>
+  <li><a href="#stochasticity" id="toc-stochasticity" class="nav-link" data-scroll-target="#stochasticity"><span class="header-section-number">1.16</span> Stochasticity</a></li>
+  <li><a href="#when-graph-community-detection-is-useful" id="toc-when-graph-community-detection-is-useful" class="nav-link" data-scroll-target="#when-graph-community-detection-is-useful"><span class="header-section-number">1.17</span> When graph community detection is useful</a></li>
+  <li><a href="#a-short-comparison-with-diffusion-maps" id="toc-a-short-comparison-with-diffusion-maps" class="nav-link" data-scroll-target="#a-short-comparison-with-diffusion-maps"><span class="header-section-number">1.18</span> A short comparison with Diffusion Maps</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Leiden clustering</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="from-coordinates-to-a-graph" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="from-coordinates-to-a-graph"><span class="header-section-number">1.1</span> From coordinates to a graph</h2>
+<p>Most clustering methods you have met so far work directly on coordinates or on distances between rows of a data matrix. K-means compares every point with a small number of centroids. DBSCAN counts how many points fall inside a fixed radius of each other point. Both methods take the position of an observation as the thing to reason about.</p>
+<p>Leiden starts from a different kind of object. Instead of positions, it works on a <strong>graph</strong>. A graph is built from two ingredients. A <strong>node</strong> is one observation, such as one point in a scatter plot or one cell in a single-cell experiment. An <strong>edge</strong> is a relationship between two nodes, usually drawn because the two observations are close to each other or similar in some measured sense. An <strong>edge weight</strong> is a number attached to an edge that says how strong that relationship is. A large weight means strong evidence that the two nodes belong together. A small weight means weak evidence.</p>
+<p>Once the data has been turned into a graph, Leiden looks for a <strong>community</strong>: a group of nodes that are more strongly connected to each other than to the rest of the graph.</p>
+</section>
+<section id="a-point-cloud" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="a-point-cloud"><span class="header-section-number">1.2</span> A point cloud</h2>
+<p>Here are 220 points measured on two variables.</p>
+<div class="visual-card">
+<div id="fig-point-cloud" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A scatter plot of 220 grey points. Two curved crescent shapes interleave on the left, a small tight group of points sits in the upper right, and a larger, looser group sits in the lower right.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-point-cloud-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/01-point-cloud.png" class="img-fluid figure-img" alt="A scatter plot of 220 grey points. Two curved crescent shapes interleave on the left, a small tight group of points sits in the upper right, and a larger, looser group sits in the lower right.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-point-cloud-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.1: 220 unlabeled observations, forming two interleaved curved bands and two round groups of different sizes.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>There are no colors and no labels in <a href="#fig-point-cloud" class="quarto-xref">Figure&nbsp;<span>1.1</span></a>. A method built around centroids would need to guess how many centres to place and where. A method built around a graph asks a more local question first: which points sit near which other points?</p>
+</section>
+<section id="building-a-neighbour-graph" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="building-a-neighbour-graph"><span class="header-section-number">1.3</span> Building a neighbour graph</h2>
+<p>Pick one point and connect it to its nearest neighbours.</p>
+<div class="visual-card">
+<div id="fig-neighbour-zoom" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A close-up view of one dark point with six edges radiating out to six nearby blue points. One edge is labelled edge and the dark point is labelled node. A note gives the weight of one edge as the reciprocal of the distance between the two points.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-neighbour-zoom-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/02-neighbour-zoom.png" class="img-fluid figure-img" alt="A close-up view of one dark point with six edges radiating out to six nearby blue points. One edge is labelled edge and the dark point is labelled node. A note gives the weight of one edge as the reciprocal of the distance between the two points.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-neighbour-zoom-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.2: One node, in black, connected by edges to its six nearest neighbours, shown in blue.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-neighbour-zoom" class="quarto-xref">Figure&nbsp;<span>1.2</span></a> shows this for a single point. The black point is a node. Each orange line connecting it to one of its six nearest neighbours is an edge. A natural choice of weight is some decreasing function of distance, so that nearby points get a strong edge and distant points get a weak one. Repeating this construction for every point in the data produces a full graph.</p>
+<div class="visual-card">
+<div id="fig-full-graph" class="quarto-float quarto-figure quarto-figure-center anchored" alt="The same 220 points as before, now with thin grey lines connecting each point to its 8 nearest neighbours, revealing denser regions where the lines overlap heavily and sparser boundary regions.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-full-graph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/03-full-graph.png" class="img-fluid figure-img" alt="The same 220 points as before, now with thin grey lines connecting each point to its 8 nearest neighbours, revealing denser regions where the lines overlap heavily and sparser boundary regions.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-full-graph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.3: The same 220 points, each connected to its 8 nearest neighbours.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-full-graph" class="quarto-xref">Figure&nbsp;<span>1.3</span></a> draws every edge at once. This particular construction, connecting each point to its <span class="math inline">\(k\)</span> nearest neighbours, is called a <strong>k-nearest-neighbour graph</strong>, or <strong>KNN graph</strong>. Even without running any algorithm, the picture already shows regions where edges pile up densely and other regions where they thin out. That contrast between dense and sparse is exactly what a community detection method exploits.</p>
+</section>
+<section id="from-graph-to-communities" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="from-graph-to-communities"><span class="header-section-number">1.4</span> From graph to communities</h2>
+<p>A person looking at <a href="#fig-full-graph" class="quarto-xref">Figure&nbsp;<span>1.3</span></a> can already guess roughly where the groups are, simply by eye.</p>
+<div class="visual-card">
+<div id="fig-candidate-final" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels showing the same 220-point graph. The left panel has three dashed orange ellipses drawn loosely around the two interleaved crescents together, the small tight group, and the larger loose group. The right panel shows the same points colored in four groups: the two crescents are separated into their own colors, plus the small and large round groups, each a different color.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-candidate-final-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/04-candidate-vs-final.png" class="img-fluid figure-img" alt="Two panels showing the same 220-point graph. The left panel has three dashed orange ellipses drawn loosely around the two interleaved crescents together, the small tight group, and the larger loose group. The right panel shows the same points colored in four groups: the two crescents are separated into their own colors, plus the small and large round groups, each a different color.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-candidate-final-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.4: Left: the graph with dashed ellipses around visually dense regions, a rough human guess. Right: the actual communities found by Leiden on this graph, in four colors.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The left panel of <a href="#fig-candidate-final" class="quarto-xref">Figure&nbsp;<span>1.4</span></a> shows a rough, human guess at candidate communities, drawn simply by eye from the density of the picture. It treats the two interleaved crescents as one blob, because from the tangle of edges alone it is not obvious that they are two separate structures. The right panel shows the communities that Leiden actually finds on this graph. It separates the two crescents from each other, in addition to picking out the small and large round groups. The final grouping used more than visual density. It used the precise pattern of which nodes connect to which, something a formal procedure can examine far more carefully than a human eye can.</p>
+</section>
+<section id="the-same-pipeline-in-single-cell-analysis" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="the-same-pipeline-in-single-cell-analysis"><span class="header-section-number">1.5</span> The same pipeline in single-cell analysis</h2>
+<p>A single-cell RNA sequencing experiment measures the expression of thousands of genes in each of thousands of cells. Leiden clustering is one of the standard ways to group cells into candidate cell types or states, and it follows exactly the pipeline just described.</p>
+<div class="visual-card">
+<div id="fig-workflow" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A horizontal flowchart: gene expression leads to preprocessing, then variable genes, then PCA, then neighbour graph, then Leiden, then cell clusters. A dashed arrow branches off the neighbour graph box down to a separate UMAP visualization box, with a note that Leiden does not cluster UMAP coordinates.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/05-workflow-diagram.svg" class="img-fluid figure-img" alt="A horizontal flowchart: gene expression leads to preprocessing, then variable genes, then PCA, then neighbour graph, then Leiden, then cell clusters. A dashed arrow branches off the neighbour graph box down to a separate UMAP visualization box, with a note that Leiden does not cluster UMAP coordinates.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.5: The single-cell Leiden workflow. Gene expression is preprocessed, reduced to variable genes and PCA coordinates, turned into a neighbour graph, and clustered with Leiden. UMAP is drawn as a separate branch off the same neighbour graph, used only for visualization.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-workflow" class="quarto-xref">Figure&nbsp;<span>1.5</span></a> shows the usual order of operations. Raw counts are preprocessed and normalized. A subset of variable genes is chosen. Principal component analysis reduces those genes to a smaller number of coordinates. A neighbour graph is built from the PCA coordinates, and Leiden clusters that graph. UMAP sits on its own branch, built from the same neighbour graph but used only to draw a two-dimensional picture of the cells.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Leiden does not cluster UMAP coordinates
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>It is easy to assume, looking at a UMAP plot with colored clusters, that the clustering was computed on the two UMAP coordinates. It was not. Leiden receives the neighbour graph, which is normally built from many PCA dimensions, not two. Two clusters that look separated on a UMAP plot is a visualization fact. It is not the mathematical definition that Leiden actually used to decide whether two cells belong together. UMAP can distort distances and neighbourhoods in ways that make groups look more or less separated than they are in the graph that was actually clustered.</p>
+</div>
+</div>
+</section>
+<section id="knn-and-snn-graphs" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="knn-and-snn-graphs"><span class="header-section-number">1.6</span> KNN and SNN graphs</h2>
+<p><a href="#fig-full-graph" class="quarto-xref">Figure&nbsp;<span>1.3</span></a> used a plain KNN graph: connect each point to its <span class="math inline">\(k\)</span> nearest neighbours. This relationship is not symmetric. Point <span class="math inline">\(A\)</span> can count <span class="math inline">\(B\)</span> among its nearest neighbours without <span class="math inline">\(B\)</span> returning the favor, if <span class="math inline">\(B\)</span> has other points that are even closer to it.</p>
+<div class="visual-card">
+<div id="fig-knn-snn" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels with the same five labelled points, A through F excluding E which is isolated. The left panel shows orange arrows from A to its three nearest neighbours and blue arrows from B to its three nearest neighbours, with one of B's neighbours, F, not being one of A's neighbours. The right panel shows a thick green edge between A and B labelled with their one shared neighbour D, alongside the same candidate neighbour relationships drawn as thin dashed lines.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-knn-snn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/06-knn-vs-snn.svg" class="img-fluid figure-img" alt="Two panels with the same five labelled points, A through F excluding E which is isolated. The left panel shows orange arrows from A to its three nearest neighbours and blue arrows from B to its three nearest neighbours, with one of B's neighbours, F, not being one of A's neighbours. The right panel shows a thick green edge between A and B labelled with their one shared neighbour D, alongside the same candidate neighbour relationships drawn as thin dashed lines.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-knn-snn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.6: Left: a KNN graph is directed. A’s nearest neighbours point outward from A, and B’s nearest neighbours point outward from B, and the two sets do not have to agree. Right: an SNN graph instead weighs the edge between A and B by how many neighbours they have in common.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The left panel of <a href="#fig-knn-snn" class="quarto-xref">Figure&nbsp;<span>1.6</span></a> shows this asymmetry. <span class="math inline">\(A\)</span>’s nearest neighbours include <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span>. <span class="math inline">\(B\)</span>’s nearest neighbours include <span class="math inline">\(D\)</span> and <span class="math inline">\(F\)</span>. <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are not each other’s nearest neighbours, yet they do share one, <span class="math inline">\(D\)</span>.</p>
+<p>A <strong>shared nearest neighbour graph</strong>, or <strong>SNN graph</strong>, uses that overlap directly. Instead of asking only whether <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are close, it counts how many neighbours <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> have in common and turns that count into an edge weight. The right panel of <a href="#fig-knn-snn" class="quarto-xref">Figure&nbsp;<span>1.6</span></a> shows this: the edge between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> is drawn because they share one neighbour, <span class="math inline">\(D\)</span>, and its weight reflects that overlap rather than the raw distance between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>.</p>
+<p>Seurat commonly builds an SNN graph from the KNN relationships before clustering, while Scanpy stores a weighted connectivity graph that already accounts for shared and overlapping neighbourhoods. The important idea for now is only that a neighbour graph can be built in more than one way, and that the choice affects which edges exist and how strong they are. Chapter 2 returns to the specific package functions.</p>
+</section>
+<section id="what-is-a-graph-community" class="level2" data-number="1.7">
+<h2 data-number="1.7" class="anchored" data-anchor-id="what-is-a-graph-community"><span class="header-section-number">1.7</span> What is a graph community?</h2>
+<p>Step away from point clouds for a moment and look at a graph directly. <a href="#fig-community-def" class="quarto-xref">Figure&nbsp;<span>1.7</span></a> shows ten nodes. Five of them, on the left, are connected to each other by every possible edge. The other five, on the right, are connected the same way. A single edge crosses between the two groups.</p>
+<div class="visual-card">
+<div id="fig-community-def" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels showing the same ten-node graph, two groups of five fully connected nodes joined by one edge. The left panel shows all ten nodes in the same pale grey, with a caption noting that all 21 edges are internal to one giant community. The right panel colors the two groups of five differently, with a dashed orange bridge edge between them, noting 20 internal edges and one edge between the two groups.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-community-def-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/07-community-definition.svg" class="img-fluid figure-img" alt="Two panels showing the same ten-node graph, two groups of five fully connected nodes joined by one edge. The left panel shows all ten nodes in the same pale grey, with a caption noting that all 21 edges are internal to one giant community. The right panel colors the two groups of five differently, with a dashed orange bridge edge between them, noting 20 internal edges and one edge between the two groups.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-community-def-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.7: Left: treating all ten nodes as one community counts every edge as internal, including the one weak bridge, but says nothing useful. Right: splitting into two groups of five keeps twenty of the twenty-one edges internal and leaves only the bridge as an external edge.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>A reasonable starting definition of a community is a group of nodes with many internal connections. Both groups of five in <a href="#fig-community-def" class="quarto-xref">Figure&nbsp;<span>1.7</span></a> qualify. But that definition alone is not enough. If the only goal is to maximize the number of edges counted as internal, the left panel of <a href="#fig-community-def" class="quarto-xref">Figure&nbsp;<span>1.7</span></a> already wins. Treating all ten nodes as one single community makes every one of its 21 edges internal, including the weak bridge. That answer is technically maximal and completely useless. It does not distinguish anything.</p>
+<p>The two-community answer on the right keeps 20 of the 21 edges internal and leaves only the bridge as an external edge. It gives up counting one edge in exchange for a partition that actually separates two distinguishable groups. A better definition of community detection therefore needs some way to penalize grouping observations together just because doing so is never counted against you. We will get back to this later. For now, the important idea is only that raw edge-counting is not enough, and that some kind of penalty for group size is needed to avoid the trivial answer of one giant cluster.</p>
+</section>
+<section id="leiden-compared-with-familiar-clustering-methods" class="level2" data-number="1.8">
+<h2 data-number="1.8" class="anchored" data-anchor-id="leiden-compared-with-familiar-clustering-methods"><span class="header-section-number">1.8</span> Leiden compared with familiar clustering methods</h2>
+<p>Before going further, it helps to place Leiden next to methods you likely already know.</p>
+<p><strong>K-means</strong> operates on the coordinates of the observations and favors compact groups built around a centroid. It struggles with curved or irregular shapes, and it needs the number of clusters fixed in advance.</p>
+<p><strong>DBSCAN</strong> looks for connected regions where points are locally dense in the chosen feature space, and separates them from sparser regions labelled as noise. Like k-means, it works directly on coordinates and distances rather than a graph.</p>
+<p><strong>Hierarchical clustering</strong> recursively joins or splits observations based on a distance or similarity measure, producing a tree of nested groupings rather than a single flat partition.</p>
+<p><strong>Spectral clustering</strong> builds a similarity graph, then uses the eigenvectors of a matrix derived from that graph to construct a new set of coordinates, and finally clusters those coordinates, often with k-means.</p>
+<p><strong>Louvain</strong> works directly on a graph and searches for a partition that optimizes a quality score, without ever leaving the graph to build new coordinates.</p>
+<p><strong>Leiden</strong> is also a graph community detection method. It follows the same overall strategy as Louvain, optimizing a quality score directly on the graph, but adds a refinement step and offers stronger guarantees about how well connected the resulting communities are. The next few sections explain what that refinement step actually does and why it is needed.</p>
+</section>
+<section id="introducing-louvain" class="level2" data-number="1.9">
+<h2 data-number="1.9" class="anchored" data-anchor-id="introducing-louvain"><span class="header-section-number">1.9</span> Introducing Louvain</h2>
+<p>Leiden is best understood as an improvement on an earlier algorithm called <strong>Louvain</strong>. Louvain repeats four operations.</p>
+<ol type="1">
+<li>Start with every node in its own community.</li>
+<li>Move nodes, one at a time, into a neighbouring community whenever doing so improves the partition.</li>
+<li>Once no more beneficial moves exist, collapse each community into a single node, producing a smaller graph.</li>
+<li>Repeat the process on this smaller graph.</li>
+</ol>
+<div class="visual-card">
+<div id="fig-louvain-storyboard" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four panels of the same ten-node graph. The first panel shows all white uncolored nodes. The second shows two nodes shaded to indicate a move in progress. The third shows the full graph colored into two communities. The fourth panel shows the two communities collapsed into two larger circular supernodes, X and Y, joined by one edge.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-louvain-storyboard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/08-louvain-storyboard.svg" class="img-fluid figure-img" alt="Four panels of the same ten-node graph. The first panel shows all white uncolored nodes. The second shows two nodes shaded to indicate a move in progress. The third shows the full graph colored into two communities. The fourth panel shows the two communities collapsed into two larger circular supernodes, X and Y, joined by one edge.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-louvain-storyboard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.8: Louvain’s four repeated steps on a small graph: begin with singleton communities, move nodes to improve the partition, arrive at communities, then collapse each community into one node for the next round.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-louvain-storyboard" class="quarto-xref">Figure&nbsp;<span>1.8</span></a> shows this sequence. Communities emerge from many small local decisions, and then the whole process repeats one level up, on a graph where each node now represents a whole community from the previous level.</p>
+</section>
+<section id="where-louvain-can-get-stuck" class="level2" data-number="1.10">
+<h2 data-number="1.10" class="anchored" data-anchor-id="where-louvain-can-get-stuck"><span class="header-section-number">1.10</span> Where Louvain can get stuck</h2>
+<p>Local, one-node-at-a-time moves are fast, but they have a blind spot. Consider a community made of two strongly connected regions, joined to each other by only one weak edge.</p>
+<div class="visual-card">
+<div id="fig-abcdef-coarse" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Six nodes labelled A through F, all shaded the same pale grey to show they are one community. A, B, and C are connected to each other by three thick edges labelled 1.00. D, E, and F are connected the same way. A single thin edge labelled 0.20 connects C to D, the only link between the two triangles.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-abcdef-coarse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/09-abcdef-coarse.svg" class="img-fluid figure-img" alt="Six nodes labelled A through F, all shaded the same pale grey to show they are one community. A, B, and C are connected to each other by three thick edges labelled 1.00. D, E, and F are connected the same way. A single thin edge labelled 0.20 connects C to D, the only link between the two triangles.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-abcdef-coarse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.9: Six nodes, A through F, currently treated as one community. A, B, and C form a strong triangle. D, E, and F form another strong triangle. The two triangles are joined by only one weak edge, between C and D.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-abcdef-coarse" class="quarto-xref">Figure&nbsp;<span>1.9</span></a> shows six nodes, <span class="math inline">\(A\)</span> through <span class="math inline">\(F\)</span>, currently grouped as one community. <span class="math inline">\(A\)</span>, <span class="math inline">\(B\)</span>, and <span class="math inline">\(C\)</span> are strongly connected to each other, as are <span class="math inline">\(D\)</span>, <span class="math inline">\(E\)</span>, and <span class="math inline">\(F\)</span>. The only connection between the two halves is the weak edge between <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span>.</p>
+<p>Ask whether any single node benefits from leaving this community on its own. <span class="math inline">\(A\)</span> is tightly held by its two strong edges to <span class="math inline">\(B\)</span> and <span class="math inline">\(C\)</span>. Moving <span class="math inline">\(A\)</span> out on its own would throw away those two strong connections in exchange for nothing, since <span class="math inline">\(A\)</span> has no edges outside the group at all. The same is true for <span class="math inline">\(B\)</span>, <span class="math inline">\(E\)</span>, and <span class="math inline">\(F\)</span>. Even <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span>, sitting right at the boundary, would give up two strong internal edges each by leaving alone, and gain nothing from the single weak edge they would be leaving behind. No individual node wants to move. Local, one-node-at-a-time moves have nothing left to do.</p>
+<p>Yet the two triangles are clearly better described as two separate communities than as one. The weak bridge should not be enough to justify treating six loosely related nodes as a single group. Louvain’s local moving step, examined one node at a time, cannot see this. Splitting <span class="math inline">\(\{A,B,C\}\)</span> from <span class="math inline">\(\{D,E,F\}\)</span> requires moving three nodes together, and no single one of those three moves is worth making on its own.</p>
+<p>This is Louvain’s central weakness. Because it only ever reconsiders one node at a time, it can settle into a partition that keeps a community together for the wrong reason, namely that no individual member happens to benefit from leaving alone. In some graphs this same mechanism can leave a community internally disconnected altogether, since nothing in the local-moving step checks whether a community, once formed, is still one connected piece.</p>
+</section>
+<section id="leidens-answer-local-moving-refinement-aggregation" class="level2" data-number="1.11">
+<h2 data-number="1.11" class="anchored" data-anchor-id="leidens-answer-local-moving-refinement-aggregation"><span class="header-section-number">1.11</span> Leiden’s answer: local moving, refinement, aggregation</h2>
+<p>Leiden keeps Louvain’s overall structure but inserts an additional step.</p>
+<ol type="1">
+<li><strong>Local moving.</strong> Move individual nodes between communities whenever doing so improves the partition, exactly as Louvain does.</li>
+<li><strong>Refinement.</strong> Within each community found by local moving, look again at its internal structure and identify smaller, well-connected pieces.</li>
+<li><strong>Aggregation.</strong> Collapse each refined piece, not each original community, into a single node of a new, smaller graph.</li>
+<li>Repeat.</li>
+</ol>
+<p>The purpose of refinement is to give the next round of local moving something better to work with. Local moving on the original six individual nodes could not split <span class="math inline">\(\{A,B,C\}\)</span> from <span class="math inline">\(\{D,E,F\}\)</span>, because that split requires moving three nodes as a unit. Refinement identifies <span class="math inline">\(\{A,B,C\}\)</span> and <span class="math inline">\(\{D,E,F\}\)</span> as sensible pieces first. Aggregation then turns each of those pieces into a single node. On that new, smaller graph, a single local move can do what three coordinated moves could not.</p>
+</section>
+<section id="how-refinement-works" class="level2" data-number="1.12">
+<h2 data-number="1.12" class="anchored" data-anchor-id="how-refinement-works"><span class="header-section-number">1.12</span> How refinement works</h2>
+<p>Refinement starts after local moving has stopped. Its input is the coarse partition produced by that step. In this example, the input contains one coarse parent community, <span class="math inline">\(\{A,B,C,D,E,F\}\)</span>. Local moving could not improve it by moving one node at a time, but that does not mean its internal structure is good.</p>
+<p>Leiden refines each coarse parent separately. Inside a parent, it creates a temporary partition in which every node starts as a singleton. A node may join another refined piece only when the move stays inside the same parent, passes the connection checks used by Leiden, and does not reduce the selected quality function at the chosen resolution. Among the acceptable moves, larger gains are preferred, with some randomness in the choice. Chapter 3 gives the exact calculation.</p>
+<div class="visual-card">
+<div id="fig-refinement-storyboard" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Six panels show one refinement sequence. Panel 1 shows ABCDEF as one coarse parent after local moving. Panel 2 resets the nodes to six singleton pieces inside that parent. Panel 3 shows A joining B and D joining E along green strong edges. Panel 4 shows C joining AB and F joining DE, again along green strong edges. Panel 5 marks the weak edge of weight 0.20 between C and D with a red cross because crossing it lowers quality. Panel 6 encloses ABC and DEF in separate blue and orange boundaries as the two refined pieces.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-refinement-storyboard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/10-refinement-storyboard.svg" class="img-fluid figure-img" alt="Six panels show one refinement sequence. Panel 1 shows ABCDEF as one coarse parent after local moving. Panel 2 resets the nodes to six singleton pieces inside that parent. Panel 3 shows A joining B and D joining E along green strong edges. Panel 4 shows C joining AB and F joining DE, again along green strong edges. Panel 5 marks the weak edge of weight 0.20 between C and D with a red cross because crossing it lowers quality. Panel 6 encloses ABC and DEF in separate blue and orange boundaries as the two refined pieces.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-refinement-storyboard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.10: Refinement inside the coarse community ABCDEF. Leiden restarts from six singleton pieces, accepts moves supported by the strong triangle edges, rejects a move across the weak bridge, and returns ABC and DEF as two refined pieces.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-refinement-storyboard" class="quarto-xref">Figure&nbsp;<span>1.10</span></a> shows one possible sequence.</p>
+<ol type="1">
+<li>Local moving supplies the coarse parent <span class="math inline">\(\{A,B,C,D,E,F\}\)</span>. The dashed boundary records that all six nodes currently have the same coarse community label.</li>
+<li>Refinement restarts the internal partition as <span class="math inline">\(A|B|C|D|E|F\)</span>. The parent boundary remains because every move is still restricted to this parent.</li>
+<li>The strong edge between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> supports a quality improving move, so they form the piece <span class="math inline">\(AB\)</span>. The same happens for <span class="math inline">\(D\)</span> and <span class="math inline">\(E\)</span>, forming <span class="math inline">\(DE\)</span>. The accepted connections are green.</li>
+<li>Node <span class="math inline">\(C\)</span> has two strong connections to <span class="math inline">\(AB\)</span>, so joining that piece improves quality. Node <span class="math inline">\(F\)</span> joins <span class="math inline">\(DE\)</span> for the same reason. The temporary partition is now <span class="math inline">\(ABC|DEF\)</span>.</li>
+<li>The only connection across the two pieces is the edge from <span class="math inline">\(C\)</span> to <span class="math inline">\(D\)</span> with weight <span class="math inline">\(0.20\)</span>. At the settings used for this example, crossing that bridge lowers quality, so the move is rejected.</li>
+<li>Refinement returns <span class="math inline">\(\{A,B,C\}\)</span> and <span class="math inline">\(\{D,E,F\}\)</span>. The blue and orange boundaries show the refined pieces.</li>
+</ol>
+<p>The visiting order can change because refinement includes randomness. A different order might build the same pieces through a different sequence of accepted moves. The rules remain the same. Moves stay inside the coarse parent, must pass the connection checks, and cannot reduce quality.</p>
+<p>The coarse partition and refined partition now serve different purposes. Refinement has not declared <span class="math inline">\(ABC\)</span> and <span class="math inline">\(DEF\)</span> to be final clusters. It has identified the units used to build the next graph. During aggregation, each refined piece becomes one node, while both nodes initially retain the community label of their shared coarse parent. The next local moving step can then reconsider either refined piece as a unit.</p>
+</section>
+<section id="supernodes" class="level2" data-number="1.13">
+<h2 data-number="1.13" class="anchored" data-anchor-id="supernodes"><span class="header-section-number">1.13</span> Supernodes</h2>
+<p>Refinement produced two pieces, <span class="math inline">\(X = \{A,B,C\}\)</span> and <span class="math inline">\(Y = \{D,E,F\}\)</span>. Aggregation turns each piece into a single node of a new, smaller graph.</p>
+<div class="visual-card">
+<div id="fig-supernode-collapse" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels. The left panel shows the six-node graph colored into the blue ABC piece and the orange DEF piece, with every edge weight labelled: 1.00 for each triangle edge, 0.20 for the bridge. The right panel shows two large circular nodes labelled X and Y, joined by a single edge labelled w subscript XY equals 0.2, with a note that each supernode represents 3 cells.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-supernode-collapse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/11-supernode-collapse.svg" class="img-fluid figure-img" alt="Two panels. The left panel shows the six-node graph colored into the blue ABC piece and the orange DEF piece, with every edge weight labelled: 1.00 for each triangle edge, 0.20 for the bridge. The right panel shows two large circular nodes labelled X and Y, joined by a single edge labelled w subscript XY equals 0.2, with a note that each supernode represents 3 cells.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-supernode-collapse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.11: Left: the six nodes colored by their refined piece, with every edge weight shown. Right: the same structure collapsed into two supernodes, X and Y, joined by one edge whose weight summarizes the total connection between the two original groups.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>In the right panel of <a href="#fig-supernode-collapse" class="quarto-xref">Figure&nbsp;<span>1.11</span></a>, <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are <strong>supernodes</strong>. Each stands for a group of original nodes. The edge between them, with weight <span class="math inline">\(0.2\)</span>, summarizes the total connection between everything inside <span class="math inline">\(X\)</span> and everything inside <span class="math inline">\(Y\)</span>. Internal edges become self connections on the supernodes, although those loops are omitted from the drawing. The membership of each supernode is also retained, so the final result can be mapped back to the original nodes.</p>
+<p>This is the central mechanical trick behind Leiden. At the original level, the local moving step can only move one cell at a time. After refinement and aggregation, a single node in the new graph can represent an entire group of cells. The very same local-moving machinery, completely unchanged, can now move that whole group in one step, simply because it is now sitting behind one node instead of three. The coordinated three-node move that local moving could never find at the original level becomes an ordinary one-node move at the aggregated level.</p>
+</section>
+<section id="resolution" class="level2" data-number="1.14">
+<h2 data-number="1.14" class="anchored" data-anchor-id="resolution"><span class="header-section-number">1.14</span> Resolution</h2>
+<p>Every example so far has used one implicit sense of how much internal connection is enough to justify keeping nodes together. That threshold is controlled by a setting called the <strong>resolution</strong>.</p>
+<div class="visual-card">
+<div id="fig-resolution-sweep" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three scatter plots of the same 220 points, colored by community. At low resolution there are two broad communities. At moderate resolution there are four communities matching the two crescents and two round groups. At high resolution there are eight smaller communities, with the crescents and the larger round group each split into pieces.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-resolution-sweep-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/12-resolution-sweep.png" class="img-fluid figure-img" alt="Three scatter plots of the same 220 points, colored by community. At low resolution there are two broad communities. At moderate resolution there are four communities matching the two crescents and two round groups. At high resolution there are eight smaller communities, with the crescents and the larger round group each split into pieces.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-resolution-sweep-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.12: The same 220-point graph clustered at three resolutions. Low resolution merges everything into two broad groups. Moderate resolution recovers the four visually distinct groups. High resolution splits the graph further into eight smaller pieces.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-resolution-sweep" class="quarto-xref">Figure&nbsp;<span>1.12</span></a> clusters the same graph three times, changing nothing but the resolution. At low resolution, the connections needed to justify a split are set high, so entire regions merge into two broad groups. At a moderate resolution, the four visually distinct groups from <a href="#fig-candidate-final" class="quarto-xref">Figure&nbsp;<span>1.4</span></a> reappear cleanly. At high resolution, the bar for staying together is raised further, and even the round groups fracture into smaller pieces.</p>
+<p>It is tempting to describe resolution as controlling the number of clusters directly, but that description gives the wrong intuition. Resolution changes the standard a group of nodes must meet before Leiden accepts them as sufficiently connected to be one community. A higher resolution demands stronger internal connection for a given group size before it is left ungrouped. The number of communities is a consequence of that standard, not something chosen directly.</p>
+</section>
+<section id="weighted-versus-unweighted-graphs" class="level2" data-number="1.15">
+<h2 data-number="1.15" class="anchored" data-anchor-id="weighted-versus-unweighted-graphs"><span class="header-section-number">1.15</span> Weighted versus unweighted graphs</h2>
+<p>Every edge so far has carried a weight. Some graphs instead treat every edge as equally strong.</p>
+<div class="visual-card">
+<div id="fig-weighted-unweighted" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels of the same six-node graph. The left panel draws all seven edges with identical thick lines and no weight labels. The right panel draws the same seven edges with thickness proportional to weight, so the bridge between C and D is visibly thin compared to the six thick triangle edges, each labelled with its numeric weight.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-weighted-unweighted-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/13-weighted-vs-unweighted.svg" class="img-fluid figure-img" alt="Two panels of the same six-node graph. The left panel draws all seven edges with identical thick lines and no weight labels. The right panel draws the same seven edges with thickness proportional to weight, so the bridge between C and D is visibly thin compared to the six thick triangle edges, each labelled with its numeric weight.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-weighted-unweighted-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.13: Left: the same six-node graph with every edge drawn with identical thickness, ignoring weight. Right: the true weighted graph, where the bridge between C and D is visibly thinner than the six strong internal edges.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>In the left panel of <a href="#fig-weighted-unweighted" class="quarto-xref">Figure&nbsp;<span>1.13</span></a>, every edge counts the same, including the bridge between <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span>. In the right panel, that bridge is visibly weaker. A strong edge contributes more evidence for keeping two nodes together than a weak edge does. Leiden can use edge weights directly in its optimization, and doing so usually changes the result.</p>
+</section>
+<section id="stochasticity" class="level2" data-number="1.16">
+<h2 data-number="1.16" class="anchored" data-anchor-id="stochasticity"><span class="header-section-number">1.16</span> Stochasticity</h2>
+<p>Leiden is a heuristic optimization procedure, not an exact solver that is guaranteed to find the single best partition of a graph. Its refinement step deliberately introduces some randomness, choosing among several good candidate moves rather than always taking the single best one. Running Leiden twice on the same graph with the same settings can therefore produce two partitions that are very similar but not identical, unless a random seed is fixed.</p>
+<p>If two runs of Leiden on the same data give a different number of clusters, or place a handful of boundary cells differently, that is not automatically evidence that one of the runs found the biologically correct answer and the other did not. Cluster labels themselves carry no meaning beyond marking group membership. A cluster numbered <code>2</code> in one run has no necessary relationship to a cluster numbered <code>2</code> in another.</p>
+</section>
+<section id="when-graph-community-detection-is-useful" class="level2" data-number="1.17">
+<h2 data-number="1.17" class="anchored" data-anchor-id="when-graph-community-detection-is-useful"><span class="header-section-number">1.17</span> When graph community detection is useful</h2>
+<p>Leiden is a good choice when the observations naturally form a graph, when local neighbourhood structure carries information, when clusters may have irregular shapes that a centroid-based method would miss, and when the dataset is large enough that a sparse graph representation, connecting each point only to its nearest neighbours, is more practical than working with every pairwise distance. Single-cell data, represented as a nearest-neighbour or shared-nearest-neighbour graph over PCA coordinates, fits this description well. So do datasets where a network is the original data, such as a social network or a protein interaction network, with no coordinates involved at all.</p>
+<p>Leiden also has limitations. It always returns discrete, non-overlapping communities. If the underlying biology is a continuous progression, such as a differentiation trajectory with no natural break points, forcing Leiden to draw a boundary somewhere can create a division that does not correspond to any biological transition. The result also depends entirely on the graph it is given. A poor choice of principal components, an unsuitable number of neighbours, an uncorrected batch effect, or a distance metric that does not suit the data will all produce a poor graph, and Leiden has no way to recognize or repair a bad graph. It optimizes the partition of whatever graph it receives.</p>
+</section>
+<section id="a-short-comparison-with-diffusion-maps" class="level2" data-number="1.18">
+<h2 data-number="1.18" class="anchored" data-anchor-id="a-short-comparison-with-diffusion-maps"><span class="header-section-number">1.18</span> A short comparison with Diffusion Maps</h2>
+<p>You may encounter Diffusion Maps in the same single-cell workflow.</p>
+<p>Diffusion Maps are a nonlinear dimensionality reduction method. They build a transition process on a graph and use its eigenvectors to summarize long-range connectivity, producing continuous coordinates that are especially useful for describing gradual, continuous structure such as a differentiation trajectory.</p>
+<p>Leiden instead produces discrete graph communities, with no continuous coordinate attached. A dataset containing several genuinely separated cell populations is naturally described by Leiden’s discrete communities. A dataset dominated by one continuous developmental progression may be better described by diffusion coordinates, trajectory inference, or pseudotime, rather than by interpreting every boundary Leiden happens to draw as a true, discrete biological state. Neither method is universally better. They answer different questions about the same graph.</p>
+<p>In the <a href="./practice.html">next chapter</a> you get to try graph clustering in R or Python.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link" aria-label="Preface">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./practice.html" class="pagination-link" aria-label="Leiden in practice">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Leiden in practice</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

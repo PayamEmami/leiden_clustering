@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; How Leiden works mathematically – Leiden Clustering</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./exercises.html" rel="next">
+<link href="./practice.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6d144699ee5a3f285c99b12d480471d8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./mathematics.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How Leiden works mathematically</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Leiden Clustering</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intuition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Leiden clustering</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Leiden in practice</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mathematics.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How Leiden works mathematically</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exercises.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Leiden exercises with PBMC3k</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-running-example" id="toc-the-running-example" class="nav-link active" data-scroll-target="#the-running-example"><span class="header-section-number">3.1</span> The running example</a></li>
+  <li><a href="#step-1-representing-the-graph" id="toc-step-1-representing-the-graph" class="nav-link" data-scroll-target="#step-1-representing-the-graph"><span class="header-section-number">3.2</span> Step 1: representing the graph</a></li>
+  <li><a href="#step-2-an-objective-function" id="toc-step-2-an-objective-function" class="nav-link" data-scroll-target="#step-2-an-objective-function"><span class="header-section-number">3.3</span> Step 2: an objective function</a>
+  <ul class="collapse">
+  <li><a href="#building-modularity" id="toc-building-modularity" class="nav-link" data-scroll-target="#building-modularity"><span class="header-section-number">3.3.1</span> Building modularity</a></li>
+  <li><a href="#why-the-null-model-matters" id="toc-why-the-null-model-matters" class="nav-link" data-scroll-target="#why-the-null-model-matters"><span class="header-section-number">3.3.2</span> Why the null model matters</a></li>
+  <li><a href="#the-community-form" id="toc-the-community-form" class="nav-link" data-scroll-target="#the-community-form"><span class="header-section-number">3.3.3</span> The community form</a></li>
+  </ul></li>
+  <li><a href="#step-3-the-constant-potts-model" id="toc-step-3-the-constant-potts-model" class="nav-link" data-scroll-target="#step-3-the-constant-potts-model"><span class="header-section-number">3.4</span> Step 3: the Constant Potts Model</a></li>
+  <li><a href="#step-4-initializing-the-partition" id="toc-step-4-initializing-the-partition" class="nav-link" data-scroll-target="#step-4-initializing-the-partition"><span class="header-section-number">3.5</span> Step 4: initializing the partition</a></li>
+  <li><a href="#step-5-the-cpm-score-of-the-coarse-partition" id="toc-step-5-the-cpm-score-of-the-coarse-partition" class="nav-link" data-scroll-target="#step-5-the-cpm-score-of-the-coarse-partition"><span class="header-section-number">3.6</span> Step 5: the CPM score of the coarse partition</a></li>
+  <li><a href="#step-6-local-moving" id="toc-step-6-local-moving" class="nav-link" data-scroll-target="#step-6-local-moving"><span class="header-section-number">3.7</span> Step 6: local moving</a></li>
+  <li><a href="#step-7-individual-moves-cannot-split-the-coarse-partition" id="toc-step-7-individual-moves-cannot-split-the-coarse-partition" class="nav-link" data-scroll-target="#step-7-individual-moves-cannot-split-the-coarse-partition"><span class="header-section-number">3.8</span> Step 7: individual moves cannot split the coarse partition</a></li>
+  <li><a href="#step-8-comparing-the-two-partitions" id="toc-step-8-comparing-the-two-partitions" class="nav-link" data-scroll-target="#step-8-comparing-the-two-partitions"><span class="header-section-number">3.9</span> Step 8: comparing the two partitions</a></li>
+  <li><a href="#step-9-refinement" id="toc-step-9-refinement" class="nav-link" data-scroll-target="#step-9-refinement"><span class="header-section-number">3.10</span> Step 9: refinement</a></li>
+  <li><a href="#step-10-the-connection-condition" id="toc-step-10-the-connection-condition" class="nav-link" data-scroll-target="#step-10-the-connection-condition"><span class="header-section-number">3.11</span> Step 10: the connection condition</a></li>
+  <li><a href="#step-11-randomness-in-refinement" id="toc-step-11-randomness-in-refinement" class="nav-link" data-scroll-target="#step-11-randomness-in-refinement"><span class="header-section-number">3.12</span> Step 11: randomness in refinement</a></li>
+  <li><a href="#step-12-aggregation" id="toc-step-12-aggregation" class="nav-link" data-scroll-target="#step-12-aggregation"><span class="header-section-number">3.13</span> Step 12: aggregation</a></li>
+  <li><a href="#step-13-aggregation-as-a-matrix-product" id="toc-step-13-aggregation-as-a-matrix-product" class="nav-link" data-scroll-target="#step-13-aggregation-as-a-matrix-product"><span class="header-section-number">3.14</span> Step 13: aggregation as a matrix product</a></li>
+  <li><a href="#step-14-aggregate-node-size" id="toc-step-14-aggregate-node-size" class="nav-link" data-scroll-target="#step-14-aggregate-node-size"><span class="header-section-number">3.15</span> Step 14: aggregate node size</a></li>
+  <li><a href="#step-15-why-aggregation-preserves-the-objective" id="toc-step-15-why-aggregation-preserves-the-objective" class="nav-link" data-scroll-target="#step-15-why-aggregation-preserves-the-objective"><span class="header-section-number">3.16</span> Step 15: why aggregation preserves the objective</a></li>
+  <li><a href="#step-16-initial-labels-on-the-aggregate-graph" id="toc-step-16-initial-labels-on-the-aggregate-graph" class="nav-link" data-scroll-target="#step-16-initial-labels-on-the-aggregate-graph"><span class="header-section-number">3.17</span> Step 16: initial labels on the aggregate graph</a></li>
+  <li><a href="#step-17-moving-refined-pieces" id="toc-step-17-moving-refined-pieces" class="nav-link" data-scroll-target="#step-17-moving-refined-pieces"><span class="header-section-number">3.18</span> Step 17: moving refined pieces</a></li>
+  <li><a href="#step-18-repeating-across-levels" id="toc-step-18-repeating-across-levels" class="nav-link" data-scroll-target="#step-18-repeating-across-levels"><span class="header-section-number">3.19</span> Step 18: repeating across levels</a></li>
+  <li><a href="#step-19-flattening-back-to-the-original-nodes" id="toc-step-19-flattening-back-to-the-original-nodes" class="nav-link" data-scroll-target="#step-19-flattening-back-to-the-original-nodes"><span class="header-section-number">3.20</span> Step 19: flattening back to the original nodes</a></li>
+  <li><a href="#step-20-algorithm-summary" id="toc-step-20-algorithm-summary" class="nav-link" data-scroll-target="#step-20-algorithm-summary"><span class="header-section-number">3.21</span> Step 20: algorithm summary</a></li>
+  <li><a href="#practical-points" id="toc-practical-points" class="nav-link" data-scroll-target="#practical-points"><span class="header-section-number">4</span> Practical points</a>
+  <ul class="collapse">
+  <li><a href="#cpm-versus-modularity" id="toc-cpm-versus-modularity" class="nav-link" data-scroll-target="#cpm-versus-modularity"><span class="header-section-number">4.1</span> CPM versus modularity</a></li>
+  <li><a href="#resolution" id="toc-resolution" class="nav-link" data-scroll-target="#resolution"><span class="header-section-number">4.2</span> Resolution</a></li>
+  <li><a href="#number-of-neighbours-versus-resolution" id="toc-number-of-neighbours-versus-resolution" class="nav-link" data-scroll-target="#number-of-neighbours-versus-resolution"><span class="header-section-number">4.3</span> Number of neighbours versus resolution</a></li>
+  <li><a href="#number-of-iterations" id="toc-number-of-iterations" class="nav-link" data-scroll-target="#number-of-iterations"><span class="header-section-number">4.4</span> Number of iterations</a></li>
+  <li><a href="#initial-membership" id="toc-initial-membership" class="nav-link" data-scroll-target="#initial-membership"><span class="header-section-number">4.5</span> Initial membership</a></li>
+  <li><a href="#edge-weights" id="toc-edge-weights" class="nav-link" data-scroll-target="#edge-weights"><span class="header-section-number">4.6</span> Edge weights</a></li>
+  <li><a href="#connectivity-guarantees" id="toc-connectivity-guarantees" class="nav-link" data-scroll-target="#connectivity-guarantees"><span class="header-section-number">4.7</span> Connectivity guarantees</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How Leiden works mathematically</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="the-running-example" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="the-running-example"><span class="header-section-number">3.1</span> The running example</h2>
+<p>We reuse the graph from Chapter 1 with six nodes, two triangles, and one weak edge.</p>
+<p><span class="math display">\[A,B,C,D,E,F, \qquad
+w_{AB}=w_{AC}=w_{BC}=1,\]</span></p>
+<p><span class="math display">\[w_{DE}=w_{DF}=w_{EF}=1,
+\qquad
+w_{CD}=0.2.\]</span></p>
+<div class="visual-card">
+<div id="fig-abcdef-coarse-math" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Six nodes labelled A through F. A, B, and C are connected to each other by three thick edges labelled 1.00. D, E, and F are connected in the same way. One thin edge labelled 0.20 connects C to D.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-abcdef-coarse-math-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/09-abcdef-coarse.svg" class="img-fluid figure-img" alt="Six nodes labelled A through F. A, B, and C are connected to each other by three thick edges labelled 1.00. D, E, and F are connected in the same way. One thin edge labelled 0.20 connects C to D.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-abcdef-coarse-math-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.1: The running example has two strongly connected triangles, ABC and DEF, joined by one weak edge between C and D.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="step-1-representing-the-graph" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="step-1-representing-the-graph"><span class="header-section-number">3.2</span> Step 1: representing the graph</h2>
+<p>A graph is a pair <span class="math inline">\(G = (V, E)\)</span>, where <span class="math inline">\(V\)</span> is the set of nodes and <span class="math inline">\(E\)</span> is the set of edges between them. For our example, <span class="math inline">\(V = \{A,B,C,D,E,F\}\)</span>.</p>
+<p>The graph is fully described by its <strong>weighted adjacency matrix</strong> <span class="math inline">\(A\)</span>, a square matrix with one row and one column per node. Entry <span class="math inline">\(A_{ij}\)</span> is the weight of the edge between node <span class="math inline">\(i\)</span> and node <span class="math inline">\(j\)</span>, or <span class="math inline">\(0\)</span> if no edge exists.</p>
+<div class="visual-card">
+<div id="fig-adjacency" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A 6 by 6 heatmap matrix with rows and columns labelled A through F. The diagonal is 0. Entries for the pairs AB, AC, BC, DE, DF, and EF are 1.00. Entries CD and DC are 0.20. All other entries are 0.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-adjacency-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/14-adjacency-matrix.png" class="img-fluid figure-img" alt="A 6 by 6 heatmap matrix with rows and columns labelled A through F. The diagonal is 0. Entries for the pairs AB, AC, BC, DE, DF, and EF are 1.00. Entries CD and DC are 0.20. All other entries are 0.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adjacency-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.2: The 6 by 6 weighted adjacency matrix of the running example.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-adjacency" class="quarto-xref">Figure&nbsp;<span>3.2</span></a> gives the full matrix. The graph is undirected, so <span class="math inline">\(A_{ij} = A_{ji}\)</span> for every pair. The diagonal is zero because the graph has no self connections.</p>
+<p>The <strong>weighted degree</strong>, or <strong>strength</strong>, of node <span class="math inline">\(i\)</span> is the sum of the weights of all its edges.</p>
+<p><span class="math display">\[k_i = \sum_j A_{ij}.\]</span></p>
+<div class="visual-card">
+<div id="fig-degrees" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bar chart with six bars labelled A through F. A, B, E, F have height 2.0. C and D have height 2.2.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-degrees-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/15-degree-bars.png" class="img-fluid figure-img" alt="A bar chart with six bars labelled A through F. A, B, E, F have height 2.0. C and D have height 2.2.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-degrees-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.3: Weighted degree of every node. A, B, E, F have degree 2. C and D, touching the weak bridge, have degree 2.2.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>For <span class="math inline">\(A\)</span>, only two edges touch it, each of weight <span class="math inline">\(1\)</span>, so <span class="math inline">\(k_A = 1 + 1 = 2\)</span>. The same holds for <span class="math inline">\(B\)</span>, <span class="math inline">\(E\)</span>, and <span class="math inline">\(F\)</span>. <span class="math inline">\(C\)</span> touches two strong edges and the weak bridge, so <span class="math inline">\(k_C = 1 + 1 + 0.2 = 2.2\)</span>. By symmetry <span class="math inline">\(k_D = 2.2\)</span> as well. <a href="#fig-degrees" class="quarto-xref">Figure&nbsp;<span>3.3</span></a> shows all six values.</p>
+<p>Summing every entry of the adjacency matrix counts every edge weight twice, once from each endpoint. Half of that total is the <strong>total edge weight</strong>, usually written <span class="math inline">\(m\)</span>.</p>
+<p><span class="math display">\[2m = \sum_i k_i, \qquad m = \frac{1}{2}\sum_i k_i.\]</span></p>
+<p>For this graph, <span class="math inline">\(\sum_i k_i = 2+2+2.2+2.2+2+2 = 12.4\)</span>, so <span class="math inline">\(2m = 12.4\)</span> and <span class="math inline">\(m = 6.2\)</span>. Directly summing the six edges of weight <span class="math inline">\(1\)</span> and the edge of weight <span class="math inline">\(0.2\)</span> also gives <span class="math inline">\(6.2\)</span>. Thus <span class="math inline">\(2m\)</span> can be found by summing the degrees or by doubling the total edge weight.</p>
+</section>
+<section id="step-2-an-objective-function" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="step-2-an-objective-function"><span class="header-section-number">3.3</span> Step 2: an objective function</h2>
+<p>Leiden compares candidate partitions using an <strong>objective function</strong>, also called a <strong>quality function</strong>. Leiden is the optimization algorithm. Modularity and the Constant Potts Model are two objectives it can optimize.</p>
+<p><span class="math display">\[\boxed{\text{Leiden = optimization algorithm.}}
+\qquad
+\boxed{\text{modularity or CPM = objective function.}}\]</span></p>
+<section id="building-modularity" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="building-modularity"><span class="header-section-number">3.3.1</span> Building modularity</h3>
+<p><strong>Modularity</strong> compares the observed graph with a random graph that keeps the same degree sequence but places edges without regard to community structure. A partition scores well when its communities contain more internal edge weight than this baseline predicts.</p>
+<p>Start from one pair of nodes, <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>. The actual connection between them is <span class="math inline">\(A_{ij}\)</span>, the entry of the adjacency matrix. The <strong>expected connection</strong> between <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> under the random baseline, if edges were placed independently in proportion to each node’s degree, is</p>
+<p><span class="math display">\[\frac{k_i k_j}{2m}.\]</span></p>
+<p>A node with a larger degree <span class="math inline">\(k_i\)</span> is expected to have stronger connections because it has more edge weight to distribute. The denominator <span class="math inline">\(2m\)</span> normalizes these expectations so their sum matches the total edge weight. The difference</p>
+<p><span class="math display">\[A_{ij} - \gamma\frac{k_i k_j}{2m}\]</span></p>
+<p>is positive when <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are connected more strongly than the baseline predicts and negative when they are connected more weakly. The <strong>resolution parameter</strong> <span class="math inline">\(\gamma\)</span> controls the weight given to the baseline. Its effect is discussed again in the practical points section.</p>
+<p>Modularity counts this difference only when <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are in the same community. Use the indicator</p>
+<p><span class="math display">\[\delta(c_i, c_j) =
+\begin{cases}
+1 &amp; \text{if } i \text{ and } j \text{ are in the same community} \\
+0 &amp; \text{otherwise,}
+\end{cases}\]</span></p>
+<p>where <span class="math inline">\(c_i\)</span> denotes the community assigned to node <span class="math inline">\(i\)</span>. Summing this quantity over every ordered pair of nodes and normalizing by <span class="math inline">\(2m\)</span> gives modularity.</p>
+<p><span class="math display">\[\boxed{
+Q = \frac{1}{2m} \sum_{i,j} \left( A_{ij} - \gamma \frac{k_i k_j}{2m} \right) \delta(c_i, c_j).
+}\]</span></p>
+<p><span class="math inline">\(A_{ij}\)</span> is the actual edge weight between <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, <span class="math inline">\(k_i\)</span> and <span class="math inline">\(k_j\)</span> are their degrees, <span class="math inline">\(m\)</span> is the total edge weight, <span class="math inline">\(\gamma\)</span> is the resolution, and <span class="math inline">\(\delta(c_i,c_j)\)</span> restricts the sum to pairs in the same community.</p>
+</section>
+<section id="why-the-null-model-matters" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="why-the-null-model-matters"><span class="header-section-number">3.3.2</span> Why the null model matters</h3>
+<p>If modularity only summed <span class="math inline">\(A_{ij}\)</span> over pairs in the same community, placing every node in one community would maximize the score. The term <span class="math inline">\(\gamma k_ik_j/2m\)</span> corrects for the connections expected from node degree. Internal connections contribute useful evidence only when they exceed that expectation.</p>
+</section>
+<section id="the-community-form" class="level3" data-number="3.3.3">
+<h3 data-number="3.3.3" class="anchored" data-anchor-id="the-community-form"><span class="header-section-number">3.3.3</span> The community form</h3>
+<p>For hand calculation, the double sum can be rewritten by community. Let <span class="math inline">\(C\)</span> range over the communities of the partition and define</p>
+<p><span class="math display">\[e_C = \sum_{\{i,j\} \subseteq C,\ i&lt;j} A_{ij}\]</span></p>
+<p>as the total internal edge weight of <span class="math inline">\(C\)</span>, counting each undirected edge <strong>once</strong>, and</p>
+<p><span class="math display">\[K_C = \sum_{i \in C} k_i\]</span></p>
+<p>as the sum of the degrees of the nodes in <span class="math inline">\(C\)</span>. The double sum <span class="math inline">\(\sum_{i,j} A_{ij}\,\delta(c_i,c_j)\)</span> runs over ordered pairs within the same community. It counts every internal edge twice and gives <span class="math inline">\(2e_C\)</span>. Likewise, <span class="math inline">\(\sum_{i,j} k_ik_j\,\delta(c_i,c_j) = K_C^2\)</span>. Substitution gives</p>
+<p><span class="math display">\[\boxed{
+Q = \frac{1}{2m}\sum_C \left(2e_C - \gamma\,\frac{K_C^2}{2m}\right).
+}\]</span></p>
+<p>The factor of <span class="math inline">\(2\)</span> appears because the original sum uses ordered pairs while <span class="math inline">\(e_C\)</span> counts each edge once.</p>
+</section>
+</section>
+<section id="step-3-the-constant-potts-model" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="step-3-the-constant-potts-model"><span class="header-section-number">3.4</span> Step 3: the Constant Potts Model</h2>
+<p>Modularity’s random baseline, <span class="math inline">\(k_ik_j/2m\)</span>, depends on node degree and on the whole graph through <span class="math inline">\(m\)</span>. This creates the <strong>resolution limit</strong>. In a large graph, modularity can fail to separate small communities when their merger scores better under the degree based baseline.</p>
+<p>The <strong>Constant Potts Model</strong>, or <strong>CPM</strong>, replaces the degree based baseline with a single constant. Instead of asking whether two nodes are connected more than their degrees would predict, CPM compares their connection with a fixed density threshold <span class="math inline">\(\gamma\)</span>.</p>
+<p>For nodes of unit size, the community form of CPM is</p>
+<p><span class="math display">\[\boxed{
+Q_{\mathrm{CPM}} = \sum_C \left( e_C - \gamma \binom{n_C}{2} \right),
+}\]</span></p>
+<p>Here <span class="math inline">\(e_C\)</span> is the internal edge weight counted once per edge, <span class="math inline">\(n_C\)</span> is the number of nodes in <span class="math inline">\(C\)</span>, and <span class="math inline">\(\binom{n_C}{2} = \frac{n_C(n_C-1)}{2}\)</span> is the number of possible pairs inside <span class="math inline">\(C\)</span>. The penalty <span class="math inline">\(\gamma\binom{n_C}{2}\)</span> depends only on the size of the community. It does not change when unrelated parts of the graph grow, which avoids the modularity resolution limit. The parameter <span class="math inline">\(\gamma\)</span> still determines the scale of the communities.</p>
+<p>This chapter counts each undirected edge once. Python <code>leidenalg</code> sums over ordered node pairs and reports twice this CPM value. Multiplying every score and every gain by two does not change which moves improve the objective.</p>
+<p>The remaining derivation uses CPM with <span class="math inline">\(\gamma = 0.24\)</span> because its community form can be calculated directly at each step.</p>
+</section>
+<section id="step-4-initializing-the-partition" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="step-4-initializing-the-partition"><span class="header-section-number">3.5</span> Step 4: initializing the partition</h2>
+<p>When no starting partition is supplied, Leiden begins with each node in a singleton community. Later iterations use the partition from the preceding iteration. A user can also provide a starting partition through <code>initial_membership</code>.</p>
+<p>This example starts from the coarse partition</p>
+<p><span class="math display">\[P = \{\{A,B,C,D,E,F\}\}\]</span></p>
+<p>with all six nodes in one community. This starting point creates a local optimum that individual node moves cannot escape. It lets us examine the role of refinement and aggregation.</p>
+</section>
+<section id="step-5-the-cpm-score-of-the-coarse-partition" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="step-5-the-cpm-score-of-the-coarse-partition"><span class="header-section-number">3.6</span> Step 5: the CPM score of the coarse partition</h2>
+<p>The coarse partition has one community containing all six nodes. Its internal edge weight, summing every edge in the graph once, is</p>
+<p><span class="math display">\[e = 1+1+1+1+1+1+0.2 = 6.2.\]</span></p>
+<p>Six nodes give <span class="math inline">\(\binom{6}{2} = 15\)</span> possible pairs. With <span class="math inline">\(\gamma = 0.24\)</span>,</p>
+<p><span class="math display">\[Q_{\mathrm{coarse}} = e - \gamma\binom{6}{2} = 6.2 - (0.24)(15) = 6.2 - 3.6 = 2.6.\]</span></p>
+</section>
+<section id="step-6-local-moving" class="level2" data-number="3.7">
+<h2 data-number="3.7" class="anchored" data-anchor-id="step-6-local-moving"><span class="header-section-number">3.7</span> Step 6: local moving</h2>
+<p><strong>Local moving</strong> considers, one node at a time, whether moving that node to a different community would raise the objective. For a node <span class="math inline">\(v\)</span> currently in community <span class="math inline">\(R\)</span>, and a candidate destination community <span class="math inline">\(C\)</span>, define</p>
+<p><span class="math display">\[w(v, C) = \sum_{j \in C} w_{vj}\]</span></p>
+<p>as the total edge weight from <span class="math inline">\(v\)</span> to the members of <span class="math inline">\(C\)</span>, and <span class="math inline">\(w(v, R\setminus\{v\})\)</span> as the total edge weight from <span class="math inline">\(v\)</span> to the rest of its current community, excluding itself.</p>
+<p>First consider an unassigned singleton <span class="math inline">\(v\)</span> joining a community <span class="math inline">\(C\)</span>. The move adds <span class="math inline">\(w(v,C)\)</span> of internal edge weight. It also increases the size of <span class="math inline">\(C\)</span> from <span class="math inline">\(n_C\)</span> to <span class="math inline">\(n_C + 1\)</span>, raising the penalty by <span class="math inline">\(\gamma\left[\binom{n_C+1}{2} - \binom{n_C}{2}\right] = \gamma\,n_C\)</span>. Since <span class="math inline">\(n_C = |C|\)</span> before the move,</p>
+<p><span class="math display">\[\boxed{
+\Delta Q = w(v,C) - \gamma\,|C|.
+}\]</span></p>
+<p>Now let <span class="math inline">\(v\)</span> move from its current community <span class="math inline">\(R\)</span> to a different community <span class="math inline">\(C\)</span>. Leaving <span class="math inline">\(R\)</span> removes <span class="math inline">\(w(v, R\setminus\{v\})\)</span> of internal edge weight. It also lowers the penalty on <span class="math inline">\(R\)</span> by <span class="math inline">\(\gamma\left[\binom{|R|}{2} - \binom{|R|-1}{2}\right] = \gamma(|R|-1)\)</span>. Joining <span class="math inline">\(C\)</span> adds <span class="math inline">\(w(v,C)\)</span> and raises the penalty on <span class="math inline">\(C\)</span> by <span class="math inline">\(\gamma|C|\)</span>. Combining the two changes gives</p>
+<p><span class="math display">\[\Delta Q = \underbrace{w(v,C) - \gamma|C|}_{\text{joining } C} \, + \, \underbrace{\big[-w(v,R\setminus\{v\}) + \gamma(|R|-1)\big]}_{\text{leaving } R},\]</span></p>
+<p>which rearranges to</p>
+<p><span class="math display">\[\boxed{
+\Delta Q = w(v,C) - w(v,R\setminus\{v\}) - \gamma\big[\,|C| - (|R|-1)\,\big].
+}\]</span></p>
+<p>Local moving computes <span class="math inline">\(\Delta Q\)</span> for every candidate community a node’s neighbours belong to, and moves the node to whichever candidate gives the largest positive <span class="math inline">\(\Delta Q\)</span>, or leaves it in place if no move improves the score. The formula for leaving <span class="math inline">\(R\)</span> to become an isolated singleton is the special case <span class="math inline">\(C = \varnothing\)</span>, so <span class="math inline">\(w(v,C) = 0\)</span> and <span class="math inline">\(|C| = 0\)</span>:</p>
+<p><span class="math display">\[\Delta Q_{\text{leave alone}} = -w(v,R\setminus\{v\}) + \gamma(|R|-1).\]</span></p>
+</section>
+<section id="step-7-individual-moves-cannot-split-the-coarse-partition" class="level2" data-number="3.8">
+<h2 data-number="3.8" class="anchored" data-anchor-id="step-7-individual-moves-cannot-split-the-coarse-partition"><span class="header-section-number">3.8</span> Step 7: individual moves cannot split the coarse partition</h2>
+<p>Apply the leaving formula to <span class="math inline">\(A\)</span>. Removing <span class="math inline">\(A\)</span> from <span class="math inline">\(\{A,B,C,D,E,F\}\)</span> leaves <span class="math inline">\(\{B,C,D,E,F\}\)</span>, a community of size <span class="math inline">\(5\)</span>.</p>
+<p><span class="math display">\[\Delta Q_A = -w(A, \{B,C,D,E,F\}) + \gamma(6-1) = -(1+1) + (0.24)(5) = -2 + 1.2 = -0.8.\]</span></p>
+<p><span class="math inline">\(A\)</span> has two edges of weight <span class="math inline">\(1\)</span>, so <span class="math inline">\(w(A,\text{rest}) = 2\)</span>. The move lowers quality by <span class="math inline">\(0.8\)</span> and is rejected. By symmetry, the same calculation gives <span class="math inline">\(\Delta Q = -0.8\)</span> for <span class="math inline">\(B\)</span>, <span class="math inline">\(E\)</span>, and <span class="math inline">\(F\)</span>.</p>
+<div class="visual-card">
+<div id="fig-a-leaves" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels of the graph with six nodes. The left panel shows all nodes as one grey community, labelled Q coarse equals 2.6. The right panel highlights A in red as a separate singleton, labelled Q after equals 1.8 and delta Q equals negative 0.8.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-a-leaves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/16-a-leaves.svg" class="img-fluid figure-img" alt="Two panels of the graph with six nodes. The left panel shows all nodes as one grey community, labelled Q coarse equals 2.6. The right panel highlights A in red as a separate singleton, labelled Q after equals 1.8 and delta Q equals negative 0.8.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-a-leaves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.4: Removing A from the coarse community lowers the objective from 2.6 to 1.8.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Now consider the boundary nodes <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span>, which touch the weak bridge.</p>
+<p><span class="math display">\[\Delta Q_C = -w(C,\{A,B,D,E,F\}) + \gamma(5) = -(1+1+0.2) + 1.2 = -2.2+1.2 = -1.0.\]</span></p>
+<p><span class="math inline">\(C\)</span> has edges to <span class="math inline">\(A\)</span>, <span class="math inline">\(B\)</span>, and <span class="math inline">\(D\)</span>, giving <span class="math inline">\(1+1+0.2=2.2\)</span>. Leaving lowers quality by <span class="math inline">\(1.0\)</span>, compared with <span class="math inline">\(0.8\)</span> for <span class="math inline">\(A\)</span>. Both nodes receive the same reduction in the size penalty, but <span class="math inline">\(C\)</span> would give up more internal edge weight. By symmetry, <span class="math inline">\(\Delta Q_D = -1.0\)</span>.</p>
+<p>All six single node departures lower quality. The partition is therefore a <strong>local optimum</strong> with respect to individual node moves. It need not be the best partition overall.</p>
+</section>
+<section id="step-8-comparing-the-two-partitions" class="level2" data-number="3.9">
+<h2 data-number="3.9" class="anchored" data-anchor-id="step-8-comparing-the-two-partitions"><span class="header-section-number">3.9</span> Step 8: comparing the two partitions</h2>
+<p>Compare the coarse partition against <span class="math inline">\(\{A,B,C\}, \{D,E,F\}\)</span>. Each triangle has internal edge weight <span class="math inline">\(e_C = 1+1+1=3\)</span> and size <span class="math inline">\(n_C=3\)</span>, giving <span class="math inline">\(\binom{3}{2}=3\)</span> pairs.</p>
+<p><span class="math display">\[Q_{ABC} = 3 - (0.24)(3) = 3 - 0.72 = 2.28, \qquad Q_{DEF} = 2.28 \text{ by symmetry.}\]</span></p>
+<p><span class="math display">\[Q_{\mathrm{refined}} = Q_{ABC} + Q_{DEF} = 2.28 + 2.28 = 4.56.\]</span></p>
+<div class="visual-card">
+<div id="fig-refined-score" class="quarto-float quarto-figure quarto-figure-center anchored" alt="The graph with six nodes is colored into a blue ABC triangle and an orange DEF triangle. All seven edge weights are labelled. The title gives Q refined as 2.28 plus 2.28 equals 4.56.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-refined-score-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/17-refined-partition.svg" class="img-fluid figure-img" alt="The graph with six nodes is colored into a blue ABC triangle and an orange DEF triangle. All seven edge weights are labelled. The title gives Q refined as 2.28 plus 2.28 equals 4.56.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-refined-score-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.5: The partition {ABC},{DEF} scores 4.56 compared with 2.6 for the coarse partition.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Since <span class="math inline">\(4.56 &gt; 2.6\)</span>, the partition into two triangles scores higher than the coarse partition. Step 7 showed why local moving cannot reach it from the chosen starting point. The improvement requires several nodes to change together.</p>
+</section>
+<section id="step-9-refinement" class="level2" data-number="3.10">
+<h2 data-number="3.10" class="anchored" data-anchor-id="step-9-refinement"><span class="header-section-number">3.10</span> Step 9: refinement</h2>
+<p><strong>Refinement</strong> works inside each community found by local moving. It restarts from singleton pieces and restricts every move to the same coarse parent community. Nodes that remain singletons are visited in a random order. A singleton can join a refined piece when the connection requirements are met and the move does not reduce quality. Step 11 describes how Leiden chooses among acceptable moves.</p>
+<p>For two separate pieces <span class="math inline">\(R\)</span> and <span class="math inline">\(S\)</span>, let <span class="math inline">\(E(R,S)\)</span> be the total edge weight between them, with each edge counted once. Before merging, the pieces contribute <span class="math inline">\(e_R - \gamma\binom{|R|}{2}\)</span> and <span class="math inline">\(e_S - \gamma\binom{|S|}{2}\)</span>. Their connecting edges are external and do not contribute. After merging, the internal edge weight is <span class="math inline">\(e_R + e_S + E(R,S)\)</span> and the size penalty is <span class="math inline">\(\gamma\binom{|R|+|S|}{2}\)</span>.</p>
+<p>The change in objective is</p>
+<p><span class="math display">\[\Delta Q(R,S) = E(R,S) - \gamma\left[\binom{|R|+|S|}{2} - \binom{|R|}{2} - \binom{|S|}{2}\right].\]</span></p>
+<p>The bracketed term counts pairs newly grouped by the merge. Pairs within <span class="math inline">\(R\)</span> and within <span class="math inline">\(S\)</span> are already included in the first two binomial terms. The remaining <span class="math inline">\(|R||S|\)</span> pairs have one node in each piece. The CPM merge gain for unit node sizes is therefore</p>
+<p><span class="math display">\[\boxed{
+\Delta Q(R,S) = E(R,S) - \gamma\,|R||S|.
+}\]</span></p>
+<p>Before a merge, <span class="math inline">\(E(R,S)\)</span> connects separate pieces. After the merge, it becomes internal edge weight. The score increases when <span class="math inline">\(E(R,S) &gt; \gamma|R||S|\)</span> and remains unchanged at equality.</p>
+<div class="visual-card">
+<div id="fig-merge-sequence" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four panels. The first shows six white singleton nodes. The second merges A and B into a blue pair, with delta Q equals 1 minus 0.24 equals 0.76. The third merges AB with C, with delta Q equals 2 minus 0.48 equals 1.52. The fourth shows the corresponding process for D, E, and F, yielding the refined pieces ABC and DEF.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-merge-sequence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/18-merge-gain-sequence.svg" class="img-fluid figure-img" alt="Four panels. The first shows six white singleton nodes. The second merges A and B into a blue pair, with delta Q equals 1 minus 0.24 equals 0.76. The third merges AB with C, with delta Q equals 2 minus 0.48 equals 1.52. The fourth shows the corresponding process for D, E, and F, yielding the refined pieces ABC and DEF.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-merge-sequence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.6: Refinement begins from six singletons. A joins B, C joins AB, and corresponding moves form DEF.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Apply the formula after restarting from <span class="math inline">\(A|B|C|D|E|F\)</span>. For the singleton pieces <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, <span class="math inline">\(E(A,B)=1\)</span>.</p>
+<p><span class="math display">\[\Delta Q(A,B) = 1 - (0.24)(1)(1) = 0.76.\]</span></p>
+<p>The positive gain allows <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> to form the piece <span class="math inline">\(\{A,B\}\)</span>. Node <span class="math inline">\(C\)</span> connects to both members of this piece with weight <span class="math inline">\(1\)</span>, so <span class="math inline">\(E(\{A,B\},C) = 1+1=2\)</span>.</p>
+<p><span class="math display">\[\Delta Q(\{A,B\}, C) = 2 - (0.24)(2)(1) = 2 - 0.48 = 1.52.\]</span></p>
+<p>The gain is also positive, giving <span class="math inline">\(\{A,B,C\}\)</span>. The corresponding moves on <span class="math inline">\(D\)</span>, <span class="math inline">\(E\)</span>, and <span class="math inline">\(F\)</span> produce <span class="math inline">\(\{D,E,F\}\)</span>.</p>
+<p>For comparison, consider joining <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span> while both are singletons. Their connecting edge has weight <span class="math inline">\(E(C,D)=0.2\)</span>.</p>
+<p><span class="math display">\[\Delta Q(C,D) = 0.2 - (0.24)(1)(1) = 0.2 - 0.24 = -0.04.\]</span></p>
+<p>The negative gain rejects this move. The sequence gives the refined partition</p>
+<p><span class="math display">\[P_{\mathrm{refined}} = \{ABC, DEF\}.\]</span></p>
+</section>
+<section id="step-10-the-connection-condition" class="level2" data-number="3.11">
+<h2 data-number="3.11" class="anchored" data-anchor-id="step-10-the-connection-condition"><span class="header-section-number">3.11</span> Step 10: the connection condition</h2>
+<p>A nonnegative gain is not the only requirement during refinement. Leiden first identifies singleton nodes that are sufficiently connected to their coarse parent. For each such node, it considers only destination pieces that are also sufficiently connected to that parent.</p>
+<p>For a subset <span class="math inline">\(S\)</span> inside a parent community <span class="math inline">\(C\)</span>, sufficient connection means</p>
+<p><span class="math display">\[E\big(S,\ C\setminus S\big) \,\ge\, \gamma\,|S|\,|C\setminus S|.\]</span></p>
+<p>Using <span class="math inline">\(R = C\setminus S\)</span> in the merge formula from Step 9 gives this condition from <span class="math inline">\(\Delta Q(S, C\setminus S) \geq 0\)</span>. The connection from <span class="math inline">\(S\)</span> to the rest of its parent must meet the threshold set by <span class="math inline">\(\gamma\)</span> and the number of pairs involved.</p>
+<p>Consider the move in which <span class="math inline">\(C\)</span> joins the piece <span class="math inline">\(\{A,B\}\)</span>. The singleton <span class="math inline">\(C\)</span> has total weight <span class="math inline">\(2.2\)</span> to the other five nodes in its parent. Its condition is</p>
+<p><span class="math display">\[2.2 \geq (0.24)(1)(5) = 1.2.\]</span></p>
+<p>The destination <span class="math inline">\(\{A,B\}\)</span> has total weight <span class="math inline">\(2\)</span> to the other four nodes in the parent. Its condition is</p>
+<p><span class="math display">\[2 \geq (0.24)(2)(4) = 1.92.\]</span></p>
+<p>Both checks pass. The move also has the positive gain of <span class="math inline">\(1.52\)</span> calculated in Step 9, so it is an acceptable refinement move. The conditions are checked before the move. The completed piece <span class="math inline">\(\{A,B,C\}\)</span> is not required to pass the same check against <span class="math inline">\(\{D,E,F\}\)</span> after the move.</p>
+<p>After each Leiden iteration, every resulting community is connected and satisfies the stronger <span class="math inline">\(\gamma\)</span> connection condition defined in the paper. Uniform density and subset optimality require repeated iterations. The connectivity guarantees section distinguishes these properties.</p>
+</section>
+<section id="step-11-randomness-in-refinement" class="level2" data-number="3.12">
+<h2 data-number="3.12" class="anchored" data-anchor-id="step-11-randomness-in-refinement"><span class="header-section-number">3.12</span> Step 11: randomness in refinement</h2>
+<p>Local moving takes the candidate with the largest positive gain. Refinement instead chooses at random among candidates that pass the connection condition and have nonnegative gain. Candidates with larger gains receive more weight, but they are not chosen deterministically.</p>
+<p>Following the notation of the original paper, a candidate community <span class="math inline">\(C\)</span> is chosen with probability proportional to</p>
+<p><span class="math display">\[\Pr(C) \propto \exp\!\left(\frac{1}{\theta}\,\Delta H(v \to C)\right),\]</span></p>
+<p>where <span class="math inline">\(\Delta H(v\to C)\)</span> is the quality gain of the candidate move and <span class="math inline">\(\theta&gt;0\)</span> controls how much randomness is injected. A small <span class="math inline">\(\theta\)</span> makes this distribution sharply peaked on the best candidate, close to ordinary greedy selection. A large <span class="math inline">\(\theta\)</span> spreads the probability more evenly across all acceptable candidates, allowing moves that are not strictly the best.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>The parameter name in software
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The paper calls the randomness parameter <span class="math inline">\(\theta\)</span>. R and Python igraph call it <code>beta</code> and default to <code>0.01</code>. Smaller values concentrate probability on the largest gains. Larger values spread probability across more acceptable candidates. The default is usually left unchanged.</p>
+</div>
+</div>
+</section>
+<section id="step-12-aggregation" class="level2" data-number="3.13">
+<h2 data-number="3.13" class="anchored" data-anchor-id="step-12-aggregation"><span class="header-section-number">3.13</span> Step 12: aggregation</h2>
+<p>Refinement produced two pieces, <span class="math inline">\(X = \{A,B,C\}\)</span> and <span class="math inline">\(Y = \{D,E,F\}\)</span>. <strong>Aggregation</strong> turns each refined piece into a single node of a new, smaller graph. The edge weight between the two new aggregate nodes is defined as the total edge weight running between the two original groups.</p>
+<p><span class="math display">\[w_{XY} = \sum_{i \in X} \sum_{j \in Y} w_{ij}.\]</span></p>
+<p>Only one edge crosses between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> in the original graph, the bridge between <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span>, of weight <span class="math inline">\(0.2\)</span>. Every other cross term in the double sum is zero, so</p>
+<p><span class="math display">\[w_{XY} = 0.2.\]</span></p>
+<p>Edges with both endpoints inside the same refined piece, such as the edge between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, become internal connections of the aggregate node. The matrix form below shows how they are retained.</p>
+</section>
+<section id="step-13-aggregation-as-a-matrix-product" class="level2" data-number="3.14">
+<h2 data-number="3.14" class="anchored" data-anchor-id="step-13-aggregation-as-a-matrix-product"><span class="header-section-number">3.14</span> Step 13: aggregation as a matrix product</h2>
+<p>Define a <strong>membership matrix</strong> <span class="math inline">\(H\)</span>, with one row per original node and one column per refined piece. <span class="math inline">\(H_{iX}=1\)</span> if original node <span class="math inline">\(i\)</span> belongs to piece <span class="math inline">\(X\)</span>, and <span class="math inline">\(0\)</span> otherwise.</p>
+<div class="visual-card">
+<div id="fig-membership" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A 6 row by 2 column matrix. Rows A, B, C have a 1 in the first column and 0 in the second. Rows D, E, F have a 0 in the first column and 1 in the second.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-membership-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/19-membership-matrix.png" class="img-fluid figure-img" alt="A 6 row by 2 column matrix. Rows A, B, C have a 1 in the first column and 0 in the second. Rows D, E, F have a 0 in the first column and 1 in the second.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-membership-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.7: The membership matrix H: rows A through F, columns X and Y.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><span class="math display">\[H =
+\begin{pmatrix}
+1&amp;0\\ 1&amp;0\\ 1&amp;0\\ 0&amp;1\\ 0&amp;1\\ 0&amp;1
+\end{pmatrix}.\]</span></p>
+<p>The aggregated adjacency matrix is obtained by the matrix product</p>
+<p><span class="math display">\[\boxed{
+A_{\mathrm{new}} = H^{\!\top} A H.
+}\]</span></p>
+<p><span class="math inline">\(H^\top\)</span> is the transpose of <span class="math inline">\(H\)</span>, a <span class="math inline">\(2\times 6\)</span> matrix. Multiplication by <span class="math inline">\(H\)</span> on the right sums the edge weights from each original node to each refined piece. Multiplication by <span class="math inline">\(H^\top\)</span> on the left then sums over the original nodes in each piece. The result is a <span class="math inline">\(2\times2\)</span> matrix with one row and one column per refined piece.</p>
+<p>Applying the multiplication to the adjacency matrix from Step 1 gives</p>
+<p><span class="math display">\[A_{\mathrm{new}} = H^{\!\top} A H =
+\begin{pmatrix}
+6 &amp; 0.2\\
+0.2 &amp; 6
+\end{pmatrix}.\]</span></p>
+<p>The off diagonal entry <span class="math inline">\(0.2\)</span> agrees with <span class="math inline">\(w_{XY}\)</span> from Step 12.</p>
+<p>The <span class="math inline">\((X,X)\)</span> entry is <span class="math inline">\(6\)</span>, while the internal edge weight of <span class="math inline">\(X = \{A,B,C\}\)</span> is <span class="math inline">\(e_X = 3\)</span> when each edge is counted once. The product <span class="math inline">\(H^\top A H\)</span> sums over ordered pairs, so every internal edge contributes twice. Thus <span class="math inline">\(6 = 2\times 3\)</span>.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Two counting conventions
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math inline">\(e_C\)</span> counts each undirected edge once. The diagonal of <span class="math inline">\(A_{\mathrm{new}} = H^\top A H\)</span> counts each internal edge twice because it sums over ordered pairs. Check the convention before comparing these quantities.</p>
+</div>
+</div>
+</section>
+<section id="step-14-aggregate-node-size" class="level2" data-number="3.15">
+<h2 data-number="3.15" class="anchored" data-anchor-id="step-14-aggregate-node-size"><span class="header-section-number">3.15</span> Step 14: aggregate node size</h2>
+<p><span class="math inline">\(X\)</span> is not an ordinary node of size one. It represents three original observations, so its <strong>node size</strong> is <span class="math inline">\(n_X = 3\)</span>, and likewise <span class="math inline">\(n_Y = 3\)</span>. In general, if node <span class="math inline">\(i\)</span> of the original graph has size <span class="math inline">\(n_i\)</span> (equal to <span class="math inline">\(1\)</span> for every original node here), the size of an aggregate node <span class="math inline">\(X\)</span> is the sum of the sizes of the pieces it absorbs,</p>
+<p><span class="math display">\[n_X = \sum_{i \in X} n_i.\]</span></p>
+<p>Aggregate node size replaces the ordinary node count when the objective is evaluated on the new graph. For two aggregate nodes, the CPM penalty is <span class="math inline">\(\gamma\,n_X n_Y\)</span>. For modularity, the corresponding quantity is the aggregate degree <span class="math inline">\(K_X = \sum_{i\in X} k_i\)</span>.</p>
+</section>
+<section id="step-15-why-aggregation-preserves-the-objective" class="level2" data-number="3.16">
+<h2 data-number="3.16" class="anchored" data-anchor-id="step-15-why-aggregation-preserves-the-objective"><span class="header-section-number">3.16</span> Step 15: why aggregation preserves the objective</h2>
+<p>Aggregation preserves the objective for partitions that respect the refined pieces. Aggregate sizes and degrees retain the information needed for the calculation.</p>
+<p>For modularity, define the aggregate cross weight and aggregate degree sum as</p>
+<p><span class="math display">\[A'_{RS} = \sum_{i \in R}\sum_{j \in S} A_{ij}, \qquad K_R = \sum_{i \in R} k_i.\]</span></p>
+<p>Then, because both sums distribute over the same index sets,</p>
+<p><span class="math display">\[A'_{RS} - \gamma\frac{K_R K_S}{2m} = \sum_{i \in R}\sum_{j \in S}\left(A_{ij} - \gamma\frac{k_ik_j}{2m}\right).\]</span></p>
+<p>The left side is the modularity comparison for aggregate nodes <span class="math inline">\(R\)</span> and <span class="math inline">\(S\)</span>. The right side sums the same comparison over the original node pairs. Distributing the double sum gives the equality. For CPM, the aggregate penalty <span class="math inline">\(\gamma\,n_R n_S\)</span> equals the sum of the unit penalties for the <span class="math inline">\(n_Rn_S\)</span> original pairs.</p>
+<p>The aggregate graph is a compressed representation of the same optimization problem for partitions that keep each refined piece intact.</p>
+</section>
+<section id="step-16-initial-labels-on-the-aggregate-graph" class="level2" data-number="3.17">
+<h2 data-number="3.17" class="anchored" data-anchor-id="step-16-initial-labels-on-the-aggregate-graph"><span class="header-section-number">3.17</span> Step 16: initial labels on the aggregate graph</h2>
+<p>The aggregate graph’s <strong>nodes</strong> are defined by the refined partition, <span class="math inline">\(P_{\mathrm{refined}} = \{X, Y\}\)</span> with <span class="math inline">\(X=\{A,B,C\}\)</span> and <span class="math inline">\(Y=\{D,E,F\}\)</span>. But the <strong>initial community assignment</strong> on this new, smaller graph is not taken from the refined partition. It is taken from the original coarse partition, <span class="math inline">\(P = \{\{A,B,C,D,E,F\}\}\)</span>, the one local moving actually produced.</p>
+<p>Because <span class="math inline">\(P\)</span> contained all six original nodes in a single community, both <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> start out labelled as belonging to that same community on the aggregate graph, even though they are two distinct nodes of that graph.</p>
+<p><span class="math display">\[X \neq Y \quad \text{as graph nodes,} \qquad c_X = c_Y \quad \text{as their starting community label.}\]</span></p>
+<p>Refinement creates two movable units without making them final communities. Their shared coarse label provides the starting partition for the next local moving phase.</p>
+</section>
+<section id="step-17-moving-refined-pieces" class="level2" data-number="3.18">
+<h2 data-number="3.18" class="anchored" data-anchor-id="step-17-moving-refined-pieces"><span class="header-section-number">3.18</span> Step 17: moving refined pieces</h2>
+<p>At the original level, Step 7 showed that no individual node, <span class="math inline">\(A\)</span> through <span class="math inline">\(F\)</span>, wanted to leave the coarse community on its own. Now run local moving again, on the aggregate graph, where <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are single nodes that happen to share a starting community label.</p>
+<p>Local moving can now separate <span class="math inline">\(X\)</span> from <span class="math inline">\(Y\)</span> in one move. Before the move, both aggregate nodes share one community and the objective is <span class="math inline">\(Q_{\mathrm{coarse}} = 2.6\)</span>. After the move, they form separate communities and the objective is <span class="math inline">\(Q_{\mathrm{refined}} = 4.56\)</span>.</p>
+<p><span class="math display">\[\Delta Q = Q_{\mathrm{refined}} - Q_{\mathrm{coarse}} = 4.56 - 2.6 = 1.96.\]</span></p>
+<p>At the original level, local moving could move only one node at a time. On the aggregate graph, it can move a refined piece in one step.</p>
+</section>
+<section id="step-18-repeating-across-levels" class="level2" data-number="3.19">
+<h2 data-number="3.19" class="anchored" data-anchor-id="step-18-repeating-across-levels"><span class="header-section-number">3.19</span> Step 18: repeating across levels</h2>
+<p>At level <span class="math inline">\(0\)</span>, each node represents one observation. At level <span class="math inline">\(1\)</span>, a node may represent several observations. At level <span class="math inline">\(2\)</span>, it may represent several groups from level <span class="math inline">\(1\)</span>.</p>
+<p>Within one Leiden iteration, local moving, refinement, and aggregation continue across levels until every node at the current level is in its own community after local moving. Another aggregation would then leave the graph unchanged.</p>
+</section>
+<section id="step-19-flattening-back-to-the-original-nodes" class="level2" data-number="3.20">
+<h2 data-number="3.20" class="anchored" data-anchor-id="step-19-flattening-back-to-the-original-nodes"><span class="header-section-number">3.20</span> Step 19: flattening back to the original nodes</h2>
+<p>Once the algorithm stops, the aggregate community labels are mapped back to the original observations. If <span class="math inline">\(X\)</span> receives label <span class="math inline">\(1\)</span>, then <span class="math inline">\(A\)</span>, <span class="math inline">\(B\)</span>, and <span class="math inline">\(C\)</span> receive label <span class="math inline">\(1\)</span>. If <span class="math inline">\(Y\)</span> receives label <span class="math inline">\(2\)</span>, then <span class="math inline">\(D\)</span>, <span class="math inline">\(E\)</span>, and <span class="math inline">\(F\)</span> receive label <span class="math inline">\(2\)</span>.</p>
+<p><span class="math display">\[\{A,B,C\} \to \text{cluster 1}, \qquad \{D,E,F\} \to \text{cluster 2}.\]</span></p>
+</section>
+<section id="step-20-algorithm-summary" class="level2" data-number="3.21">
+<h2 data-number="3.21" class="anchored" data-anchor-id="step-20-algorithm-summary"><span class="header-section-number">3.21</span> Step 20: algorithm summary</h2>
+<div class="visual-card">
+<div id="fig-algorithm-diagram" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A flow diagram. Top row: input weighted graph, current partition, local moving, queue empty. An arrow drops down to a second row: refine within each community, refined pieces, aggregate graph, local moving on supernodes. A loop labelled repeat levels returns from the end of the second row back to the current partition box in the first row. A separate arrow leads down from local moving on supernodes to flatten to original nodes, then to the final partition.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-algorithm-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/20-algorithm-diagram.svg" class="img-fluid figure-img" alt="A flow diagram. Top row: input weighted graph, current partition, local moving, queue empty. An arrow drops down to a second row: refine within each community, refined pieces, aggregate graph, local moving on supernodes. A loop labelled repeat levels returns from the end of the second row back to the current partition box in the first row. A separate arrow leads down from local moving on supernodes to flatten to original nodes, then to the final partition.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-algorithm-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.8: The complete Leiden procedure: local moving on the current graph until its queue is empty, refinement inside each resulting community, aggregation of the refined pieces into a smaller graph whose initial communities come from the coarse partition, repetition across levels, and a final flattening step back to the original nodes.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-algorithm-diagram" class="quarto-xref">Figure&nbsp;<span>3.8</span></a> summarizes the sequence. Local moving stops when its queue is empty. Refinement finds smaller connected pieces inside each community. Aggregation turns those pieces into nodes while using the coarse partition for their starting labels. Local moving then runs on the aggregate graph. The levels end when every current node has its own community, and the labels are mapped back to the original observations.</p>
+</section>
+<section id="practical-points" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Practical points</h1>
+<section id="cpm-versus-modularity" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="cpm-versus-modularity"><span class="header-section-number">4.1</span> CPM versus modularity</h2>
+<p>Both objectives compare internal connections with a baseline. Modularity uses node degree and the total graph weight <span class="math inline">\(2m\)</span>. The dependence creates the resolution limit described in Step 3. CPM uses the constant <span class="math inline">\(\gamma\)</span>, so its baseline does not depend on graph size. CPM is useful when the same graph is examined at several resolutions.</p>
+<p>Neither objective is always preferable. Direct calls to R <code>igraph::cluster_leiden()</code> and Python <code>igraph.Graph.community_leiden()</code> default to CPM. Scanpy <code>sc.tl.leiden()</code> and Seurat <code>FindClusters(algorithm = 4)</code> default to a modularity objective.</p>
+</section>
+<section id="resolution" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="resolution"><span class="header-section-number">4.2</span> Resolution</h2>
+<p>For CPM, merging pieces <span class="math inline">\(R\)</span> and <span class="math inline">\(S\)</span> raises the objective when</p>
+<p><span class="math display">\[E(R,S) &gt; \gamma\,|R||S|.\]</span></p>
+<p>The connection between the pieces must exceed <span class="math inline">\(\gamma\)</span> times the number of new pairs created by the merge. Raising <span class="math inline">\(\gamma\)</span> therefore requires more edge weight.</p>
+<p>For the final pieces <span class="math inline">\(ABC\)</span> and <span class="math inline">\(DEF\)</span>, the only connecting edge has weight <span class="math inline">\(0.2\)</span> and the size product is <span class="math inline">\(3\times3=9\)</span>. Their merger improves quality only when <span class="math inline">\(0.2 &gt; 9\gamma\)</span>. At <span class="math inline">\(\gamma=0.24\)</span>, the right side is <span class="math inline">\(2.16\)</span> and the pieces stay separate. At <span class="math inline">\(\gamma=0.02\)</span>, the right side is <span class="math inline">\(0.18\)</span> and merging them raises the score. The threshold depends on both the connection weight and the sizes of the pieces.</p>
+</section>
+<section id="number-of-neighbours-versus-resolution" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="number-of-neighbours-versus-resolution"><span class="header-section-number">4.3</span> Number of neighbours versus resolution</h2>
+<p>The <strong>number of neighbours</strong> changes which edges exist before Leiden runs. The <strong>resolution</strong> changes how Leiden partitions that graph. A larger neighbour count usually produces a denser graph. A larger resolution requires stronger connections for nodes to remain grouped. The settings act at different stages of the workflow.</p>
+</section>
+<section id="number-of-iterations" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="number-of-iterations"><span class="header-section-number">4.4</span> Number of iterations</h2>
+<p>One <strong>iteration</strong> runs local moving, refinement, and aggregation across levels, then maps the result back to the original nodes. Another iteration uses that result as its starting partition. The objective cannot decrease between iterations, although later iterations may leave the partition unchanged.</p>
+<p>Several implementations use a negative iteration count to mean that iteration continues until a pass gives no improvement.</p>
+</section>
+<section id="initial-membership" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="initial-membership"><span class="header-section-number">4.5</span> Initial membership</h2>
+<p>Leiden can begin from a supplied partition rather than from singletons. It can continue from an earlier Leiden result or from a partition produced by another method.</p>
+</section>
+<section id="edge-weights" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="edge-weights"><span class="header-section-number">4.6</span> Edge weights</h2>
+<p>The quantities <span class="math inline">\(A_{ij}\)</span>, <span class="math inline">\(E(R,S)\)</span>, <span class="math inline">\(e_C\)</span>, and <span class="math inline">\(w(v,C)\)</span> all allow weighted edges. A larger edge weight contributes more to internal quality and to merge gains. The choice between a weighted and unweighted graph is made during graph construction.</p>
+</section>
+<section id="connectivity-guarantees" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="connectivity-guarantees"><span class="header-section-number">4.7</span> Connectivity guarantees</h2>
+<p>After each Leiden iteration, every community is <span class="math inline">\(\gamma\)</span> connected, which is stronger than ordinary graph connectivity. Louvain does not provide this guarantee.</p>
+<p>When an iteration leaves the partition unchanged, every node is locally optimal and every community is subpartition <span class="math inline">\(\gamma\)</span> dense. With continued iteration to asymptotic stability, communities become uniformly <span class="math inline">\(\gamma\)</span> dense and the partition becomes subset optimal. Uniform density means that every split of a community leaves its two parts sufficiently connected. Subset optimality means that no subset can move to another community and improve the objective.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./practice.html" class="pagination-link" aria-label="Leiden in practice">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Leiden in practice</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./exercises.html" class="pagination-link" aria-label="Leiden exercises with PBMC3k">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Leiden exercises with PBMC3k</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
